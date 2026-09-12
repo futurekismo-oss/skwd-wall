@@ -1,0 +1,18 @@
+{
+  "format": 1,
+  "name": "skwd-wall-nix-channel",
+  "nix_channel_manifest_sha256": "45a98442cc76a9b01e5574d484c3f43bad8be624818f8148f3f7ecef987c0d4e",
+  "nix_store_paths": [
+    "/nix/store/dfa56m5nk3ql70l9n7afqgk9llq1szyr-skwd-wall-v2-1.0.0-beta.13",
+    "/nix/store/5jvipfnrvjd4ff583348nai1rflr151w-skwd-deck-1.0.0-beta.13",
+    "/nix/store/8fpa0nhapjjz9h0dp8aqhlxbnzqy3yln-skwd-paper-1.0.0-beta.13",
+    "/nix/store/yambgdwvran89yh8lzxxmywg9is6gxf9-skwd-lens-1.0.0-beta.13",
+    "/nix/store/04bm32hrgjam1zpfa6wkpd2s6f5pcab3-skwd-suite-binary-1.0.0-beta.13",
+    "/nix/store/x41c8rwkp6k937wbdnmpc4p309qymcwq-skwd-lens-model-1.0.0",
+    "/nix/store/ha83dz5g7cadh3w2symb1qr4mbqacs1g-skwd-paper-plasma-1.0.0-beta.13"
+  ],
+  "release_revision": "9735be4ee1cf8b367773170e9e24c4f07ec3dd8b",
+  "release_tag": "v1.0.0-beta.13",
+  "release_url": "https://github.com/liixini/skwd-wall/releases/tag/v1.0.0-beta.13",
+  "version": "1.0.0-beta.13"
+}
