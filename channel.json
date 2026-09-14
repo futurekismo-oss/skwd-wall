@@ -1,18 +1,18 @@
 {
   "format": 1,
   "name": "skwd-wall-nix-channel",
-  "nix_channel_manifest_sha256": "45a98442cc76a9b01e5574d484c3f43bad8be624818f8148f3f7ecef987c0d4e",
+  "nix_channel_manifest_sha256": "97d970853c675a60f252f73c8166baa069ee5803475495c60c1ff4125be23788",
   "nix_store_paths": [
-    "/nix/store/dfa56m5nk3ql70l9n7afqgk9llq1szyr-skwd-wall-v2-1.0.0-beta.13",
-    "/nix/store/5jvipfnrvjd4ff583348nai1rflr151w-skwd-deck-1.0.0-beta.13",
-    "/nix/store/8fpa0nhapjjz9h0dp8aqhlxbnzqy3yln-skwd-paper-1.0.0-beta.13",
-    "/nix/store/yambgdwvran89yh8lzxxmywg9is6gxf9-skwd-lens-1.0.0-beta.13",
-    "/nix/store/04bm32hrgjam1zpfa6wkpd2s6f5pcab3-skwd-suite-binary-1.0.0-beta.13",
-    "/nix/store/x41c8rwkp6k937wbdnmpc4p309qymcwq-skwd-lens-model-1.0.0",
-    "/nix/store/ha83dz5g7cadh3w2symb1qr4mbqacs1g-skwd-paper-plasma-1.0.0-beta.13"
+    "/nix/store/scnrlfakiszw4vgj0a2fc84f35yvwd43-skwd-wall-v2-1.0.0-beta.14.1",
+    "/nix/store/s9yi9bqn1957dmbc8hdvaky05f2msc4k-skwd-deck-1.0.0-beta.14.1",
+    "/nix/store/74igyjx1ndchm07vn408nrlwxk7c3pll-skwd-paper-1.0.0-beta.14.1",
+    "/nix/store/wmww9i0gwgykg8ng6mr4jin8rpyi7nyr-skwd-lens-1.0.0-beta.14.1",
+    "/nix/store/d81593wimdyqb19fkfxx2wdqvpmnk8jz-skwd-suite-binary-1.0.0-beta.14.1",
+    "/nix/store/phwr9i5rbvmmqjzsrbyma4zbnrs2y0hz-skwd-lens-model-1.0.0",
+    "/nix/store/3a1y207ip8p982mx19968qx57vjwmqiw-skwd-paper-plasma-1.0.0-beta.14.1"
   ],
-  "release_revision": "9735be4ee1cf8b367773170e9e24c4f07ec3dd8b",
-  "release_tag": "v1.0.0-beta.13",
-  "release_url": "https://github.com/liixini/skwd-wall/releases/tag/v1.0.0-beta.13",
-  "version": "1.0.0-beta.13"
+  "release_revision": "0ceecfcb4381a9f5d4b71d7fa942c99dcabe5fd5",
+  "release_tag": "v1.0.0-beta.14.1",
+  "release_url": "https://github.com/liixini/skwd-wall/releases/tag/v1.0.0-beta.14.1",
+  "version": "1.0.0-beta.14.1"
 }
