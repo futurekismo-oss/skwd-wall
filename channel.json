@@ -1,18 +1,18 @@
 {
   "format": 1,
   "name": "skwd-wall-nix-channel",
-  "nix_channel_manifest_sha256": "dc89ee3beebb5f2898ba528d6c20270ca4fa08e60051706b8ba2eac0a939e881",
+  "nix_channel_manifest_sha256": "5eac1df200f21b7f9f168332be7b1efc885bd75d44c3aa3fadf4f47e20f785b6",
   "nix_store_paths": [
-    "/nix/store/in7v009b1vci7vma7j50v6vzhzym90k4-skwd-wall-v2-1.0.0-beta.15",
-    "/nix/store/mcj9m72vik38wkcnq4rd4cixwq5zsd0m-skwd-deck-1.0.0-beta.15",
-    "/nix/store/km0z72zdgd2kcdb2404nrj4wrk5mnmmm-skwd-paper-1.0.0-beta.15",
-    "/nix/store/i35i3ny3bjl08420bwfxpnvih20732n3-skwd-lens-1.0.0-beta.15",
-    "/nix/store/y2bjxycfr1d201iw5552ijppwavk5k7r-skwd-suite-binary-1.0.0-beta.15",
-    "/nix/store/gvhp34adv0j48ws1j96l5m3c7k3lcbsf-skwd-lens-model-1.0.0",
-    "/nix/store/gk3zl9z1cznfa61msnn8mdf9hfwwr0wp-skwd-paper-plasma-1.0.0-beta.15"
+    "/nix/store/3757v0lrjkcw4lnfrnmi2fzaxv1f82gj-skwd-wall-v2-1.0.0-beta.16",
+    "/nix/store/33mxh0w8nc8lvyyzg34myrhvslsnrh07-skwd-deck-1.0.0-beta.16",
+    "/nix/store/kbk80n4li73cyc237mxd5ri0d3r01inn-skwd-paper-1.0.0-beta.16",
+    "/nix/store/b57m9in1li80l70r7wl6kmqbhajcadwy-skwd-lens-1.0.0-beta.16",
+    "/nix/store/qnmfzv112n2r3yhbxsv6n8kcs88xkqsf-skwd-suite-binary-1.0.0-beta.16",
+    "/nix/store/zyzi0m2p8xqgsdb7r728qzgg2ra3n09i-skwd-lens-model-1.0.0",
+    "/nix/store/7m2rax728vd2mnff6qqmh17asyfzpv9m-skwd-paper-plasma-1.0.0-beta.16"
   ],
-  "release_revision": "6e3ff3814c85a4a54417e82369a66e0ef53b754d",
-  "release_tag": "v1.0.0-beta.15",
-  "release_url": "https://github.com/liixini/skwd-wall/releases/tag/v1.0.0-beta.15",
-  "version": "1.0.0-beta.15"
+  "release_revision": "06c7070c00f2fa4ca80bc68ba493f70ab082460b",
+  "release_tag": "v1.0.0-beta.16",
+  "release_url": "https://github.com/liixini/skwd-wall/releases/tag/v1.0.0-beta.16",
+  "version": "1.0.0-beta.16"
 }
