@@ -55,7 +55,7 @@ in
         Restart = "on-failure";
         Environment = [
           "SKWD_LENS_HOME=${cfg.modelPackage}/share/skwd-lens/models/semantic"
-          "PATH=${lib.makeBinPath ([ self.packages.${pkgs.system}.paper self.packages.${pkgs.system}.lens ] ++ cfg.extraPackages)}"
+          # "PATH=${lib.makeBinPath ([ self.packages.${pkgs.system}.paper self.packages.${pkgs.system}.lens ] ++ cfg.extraPackages)}"
         ];
       };
     };
