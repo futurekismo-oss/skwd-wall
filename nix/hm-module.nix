@@ -8,12 +8,12 @@
 }:
 
 let
-  cfg = config.programs.skwd-wall;
+  cfg = config.services.skwd-walld;
 in
 {
-  options.programs.skwd-wall = {
+  options.services.skwd-walld = {
     enable = lib.mkEnableOption "skwd-wall control service and binaries";
-
+    
     extraPackages = lib.mkOption {
       type = lib.types.listOf lib.types.package;
       default = [ ];
@@ -32,7 +32,8 @@ in
     home.packages = [
       self.packages.${pkgs.system}.default
       cfg.modelPackage
-    ] ++ cfg.extraPackages;
+    ]
+    ++ cfg.extraPackages;
 
     home.sessionVariables = {
       SKWD_LENS_HOME = "${cfg.modelPackage}/share/skwd-lens/models/semantic";
@@ -53,6 +54,12 @@ in
       Service = {
         ExecStart = "${self.packages.${pkgs.system}.deck}/bin/skwd-walld";
         Restart = "on-failure";
+        PassEnvironment = [
+          "WAYLAND_DISPLAY"
+          "XDG_CURRENT_DESKTOP"
+          "XDG_RUNTIME_DIR"
+          "XDG_SESSION_TYPE"
+        ];
         Environment = [
           "SKWD_LENS_HOME=${cfg.modelPackage}/share/skwd-lens/models/semantic"
           # "PATH=${lib.makeBinPath ([ self.packages.${pkgs.system}.paper self.packages.${pkgs.system}.lens ] ++ cfg.extraPackages)}"
