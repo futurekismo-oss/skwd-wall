@@ -54,15 +54,8 @@ in
       Service = {
         ExecStart = "${self.packages.${pkgs.system}.deck}/bin/skwd-walld";
         Restart = "on-failure";
-        PassEnvironment = [
-          "WAYLAND_DISPLAY"
-          "XDG_CURRENT_DESKTOP"
-          "XDG_RUNTIME_DIR"
-          "XDG_SESSION_TYPE"
-        ];
         Environment = [
           "SKWD_LENS_HOME=${cfg.modelPackage}/share/skwd-lens/models/semantic"
-          # "PATH=${lib.makeBinPath ([ self.packages.${pkgs.system}.paper self.packages.${pkgs.system}.lens ] ++ cfg.extraPackages)}"
         ];
       };
     };
