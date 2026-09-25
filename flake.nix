@@ -4,7 +4,7 @@
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
   outputs =
-    { self, nixpkgs }:
+    { self, nixpkgs, home-manager }:
     let
       release = builtins.fromJSON (builtins.readFile ./nix/release.json);
       forAllSystems = nixpkgs.lib.genAttrs [ "x86_64-linux" ];
@@ -28,6 +28,8 @@
           pkgs = import nixpkgs { inherit system; };
           packages = self.packages.${system};
           nixosModule = self.nixosModules.default;
+          homeManagerModule = self.homeModules.default;
+          inherit home-manager;
           inherit release;
         }
       );
