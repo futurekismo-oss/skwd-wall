@@ -20,9 +20,6 @@ jobs:
     runs-on: skwd-wall-next-ci
     timeout-minutes: 35
     env:
-      GIT_CONFIG_COUNT: "1"
-      GIT_CONFIG_KEY_0: "url.file://${{ github.workspace }}/suite/skwd-iced-layershell.insteadOf"
-      GIT_CONFIG_VALUE_0: "ssh://git@build.liixini.com/liixini/skwd-iced-layershell.git"
       CARGO_INCREMENTAL: "0"
       CARGO_PROFILE_RELEASE_PANIC: unwind
       CARGO_TERM_COLOR: always
@@ -39,15 +36,6 @@ jobs:
         uses: https://code.forgejo.org/actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           path: suite/skwd-wall
-          persist-credentials: false
-
-      - name: Check out the pinned layer-shell fork
-        uses: https://code.forgejo.org/actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-        with:
-          repository: liixini/skwd-iced-layershell
-          ref: fef83a1f223fd30561100aec452d08b77c4215b0
-          path: suite/skwd-iced-layershell
-          token: ${{ secrets.SKWD_SUITE_READ_TOKEN }}
           persist-credentials: false
 
       - name: Check out Deck contracts

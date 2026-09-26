@@ -2,7 +2,7 @@
 resolver = "3"
 
 [workspace.package]
-version = "1.0.0-beta.21"
+version = "1.0.0-beta.22"
 edition = "2024"
 license = "GPL-3.0-or-later"
 authors = ["liixini"]
@@ -78,7 +78,7 @@ iced_layershell = { version = "0.19.1", default-features = false }
 wayland-client = "0.31"
 
 [patch.crates-io]
-iced_layershell = { git = "ssh://git@build.liixini.com/liixini/skwd-iced-layershell.git", rev = "fef83a1f223fd30561100aec452d08b77c4215b0" }
+iced_layershell = { git = "https://github.com/liixini/skwd-iced-layershell.git", rev = "229fcc7c928e3e0a37b99d1822cfdad84fed450f" }
 iced_wgpu = { git = "https://github.com/liixini/skwd-iced-wgpu.git", rev = "2ab8bbebec0e31ee24fb919b97cfcbab94ab9ad8" }
 
 [profile.release]
