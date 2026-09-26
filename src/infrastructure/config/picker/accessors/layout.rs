@@ -35,7 +35,7 @@ impl Config {
         visible_count: sel_num(skwd_config::keys::selector::VISIBLE_COUNT, 12.0, 8.0) as usize;
         expanded_width: sel_num(skwd_config::keys::selector::EXPANDED_WIDTH, 924.0, 600.0) as f32;
         slice_width: sel_num(skwd_config::keys::selector::SLICE_WIDTH, 135.0, 90.0) as f32;
-        slice_spacing: sel_num(skwd_config::keys::selector::SLICE_SPACING, -30.0, -30.0) as f32;
+        slice_spacing: sel_num(skwd_config::keys::selector::SLICE_SPACING, 0.0, 0.0) as f32;
         skew_offset: sel_num(skwd_config::keys::selector::SKEW_OFFSET, 35.0, 25.0) as f32;
         slice_edge_tilt: sel_num(skwd_config::keys::selector::SLICE_EDGE_TILT, 0.0, 0.0) as f32;
         grid_thumb_width: sel_num(skwd_config::keys::selector::GRID_THUMB_WIDTH, 300.0, 220.0) as f32;

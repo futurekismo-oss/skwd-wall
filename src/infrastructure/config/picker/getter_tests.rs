@@ -26,6 +26,21 @@ fn sel(map: Value) -> Config {
 }
 
 #[test]
+fn slices_default_to_touching_edges_and_preserve_explicit_spacing() {
+    for small in [false, true] {
+        let mut config = cfg(json!({}));
+        config.small = small;
+        assert_eq!(config.slice_spacing(), 0.0);
+
+        for spacing in [-70.0, -30.0, 0.0, 12.0] {
+            let mut config = sel(json!({"sliceSpacing": spacing}));
+            config.small = small;
+            assert_eq!(config.slice_spacing(), spacing);
+        }
+    }
+}
+
+#[test]
 fn battery_saver_fps_cap() {
     assert_eq!(cfg(json!({})).max_fps(), 120.0);
     assert!(!cfg(json!({})).battery_saver_active());
