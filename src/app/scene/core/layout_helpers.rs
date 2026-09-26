@@ -99,3 +99,10 @@ pub(super) fn sandy_card_border(
         body.params[1] = 1.1;
     }
 }
+
+pub(super) fn apply_position_parallax(body: &mut InstanceRaw, position: f32) {
+    let [_, _, w, h] = body.crop;
+    let nw = w / 1.4;
+    let nh = h / 1.4;
+    body.crop = [(1.0 - nw) * (0.5 + position.clamp(-1.0, 1.0) * 0.5), (1.0 - nh) * 0.5, nw, nh];
+}

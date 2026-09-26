@@ -139,6 +139,7 @@ impl SettingsSource for FakeSettingsSource {
             "hex" => String::from("hex"),
             "sandy" | "nova" => String::from("sandy"),
             "hand" => String::from("hand"),
+            "collection" => String::from("collection"),
             _ => String::from("slices"),
         }
     }

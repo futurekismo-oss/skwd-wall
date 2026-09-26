@@ -345,6 +345,7 @@ impl SceneCore {
             hex: false,
             hex_shape: HexShape::Hexagon,
             triangle_direction: 0,
+            quad: None,
         });
         if idx == Some(self.current) {
             let item = &ctx.catalog.items[store];
@@ -559,6 +560,7 @@ impl SceneCore {
             hex: false,
             hex_shape: HexShape::Hexagon,
             triangle_direction: 0,
+            quad: None,
         };
         draws.push(Draw { depth: quad.depth, inst, hit: Some(hit) });
     }
@@ -768,6 +770,7 @@ impl SceneCore {
             hex: false,
             hex_shape: HexShape::Hexagon,
             triangle_direction: 0,
+            quad: None,
         })
     }
 

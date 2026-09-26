@@ -32,6 +32,8 @@ pub struct SceneCore {
     pub kb_nav: bool,
     pub(super) user_engaged: bool,
     pub(super) camera: Spring,
+    pub(super) collection_open: Spring,
+    pub(super) collection_card: Option<usize>,
     pub(super) layout_camera_anchor: bool,
     pub(super) scroll_accum: f32,
     pub(super) scroll_vel: f32,
@@ -357,7 +359,7 @@ impl SceneCore {
         hp: HexParams,
         xp: ExtraParams,
     ) -> Self {
-        Self {
+        let mut scene = Self {
             mode,
             sp,
             gp,
@@ -376,6 +378,8 @@ impl SceneCore {
                 0.0,
                 if mode == Mode::Grid { MotionTier::Slow } else { MotionTier::Standard },
             ),
+            collection_open: MotionProfile::default().spring(0.0, MotionTier::Standard),
+            collection_card: None,
             layout_camera_anchor: false,
             scroll_accum: 0.0,
             scroll_vel: 0.0,
@@ -393,6 +397,8 @@ impl SceneCore {
             filter_bar_footprint: None,
             reading_rtl: false,
             preview_state: PreviewState::new(),
-        }
+        };
+        scene.retime_shared_motion();
+        scene
     }
 }

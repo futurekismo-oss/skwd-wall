@@ -224,6 +224,7 @@ fn browser_hover_fade_releases() {
             hex: false,
             hex_shape: crate::frontend::scene::layout::HexShape::Hexagon,
             triangle_direction: 0,
+            quad: None,
         },
     );
 

@@ -177,3 +177,83 @@ fn grid_dimensions_never_zero() {
     assert!(conf.grid_columns() >= 1);
     assert!(conf.grid_rows() >= 1);
 }
+
+#[test]
+fn parallax_presets_round_trip_independently() {
+    let mut conf = cfg(json!({"components":{"wallpaperSelector":{
+        "displayMode":"slices","sliceParallax":true,"hexParallax":false
+    }}}));
+    assert!(conf.slice_parallax());
+    assert!(!conf.hex_parallax());
+    conf.save_selector_preset("slices", "Moving images");
+    conf.set_key(skwd_config::keys::selector::SLICE_PARALLAX, json!(false));
+    conf.apply_selector_preset("slices", "Moving images");
+    assert!(conf.slice_parallax());
+    assert!(!conf.hex_parallax());
+    conf.set_key(skwd_config::keys::selector::DISPLAY_MODE, json!("hex"));
+    conf.set_key(skwd_config::keys::selector::HEX_PARALLAX, json!(true));
+    conf.save_selector_preset("hex", "Moving shapes");
+    conf.set_key(skwd_config::keys::selector::HEX_PARALLAX, json!(false));
+    conf.apply_selector_preset("hex", "Moving shapes");
+    assert!(conf.slice_parallax());
+    assert!(conf.hex_parallax());
+}
+
+#[test]
+fn collection_does_not_capture_slice_settings() {
+    let conf = cfg(json!({"components":{"wallpaperSelector":{
+        "displayMode":"collection", "sliceWidth":200.0
+    }}}));
+    assert_eq!(conf.selector_mode(), "collection");
+    assert!(conf.selector_preset_snapshot().get("sliceWidth").is_none());
+    assert_eq!(conf.selector_preset_snapshot()["collectionSize"], json!(42.0));
+    assert_eq!(conf.filter_bar_visual_style(), "slices");
+}
+
+#[test]
+fn depth_and_collection_presets_restore_only_their_mode() {
+    for (mode, key, value) in
+        [("depth", "depthFalloffFactor", 0.65), ("collection", "collectionTilt", 25.0)]
+    {
+        let mut conf = cfg(
+            json!({"components":{"wallpaperSelector":{"displayMode":mode, "sliceHeight":333}}}),
+        );
+        let path = format!("components.wallpaperSelector.{key}");
+        conf.set_key(&path, json!(value));
+        conf.save_selector_preset(mode, "Custom");
+        conf.set_key(&path, json!(0));
+        conf.apply_selector_preset(mode, "Custom");
+        assert!((conf.get(&path).unwrap().as_f64().unwrap() - value).abs() < 0.000_001);
+        assert_eq!(conf.get(skwd_config::keys::selector::SLICE_HEIGHT), Some(&json!(333)));
+        assert!(
+            conf.selector_preset_snapshot()
+                .as_object()
+                .unwrap()
+                .keys()
+                .all(|key| key.starts_with(mode))
+        );
+    }
+}
+
+#[test]
+fn shadow_settings_are_independent_and_saved_with_their_layout() {
+    for (mode, key, other) in
+        [("depth", "depthShadows", "sliceShadows"), ("slices", "sliceShadows", "depthShadows")]
+    {
+        let mut conf = cfg(json!({"components":{"wallpaperSelector":{
+            "displayMode":mode,"depthShadows":true,"sliceShadows":true
+        }}}));
+        assert!(conf.depth_shadows());
+        assert!(conf.slice_shadows());
+        conf.set_key(&format!("components.wallpaperSelector.{key}"), json!(false));
+        conf.save_selector_preset(mode, "No shadows");
+        let snapshot = conf.selector_preset_snapshot();
+        assert_eq!(snapshot[key], json!(false));
+        assert!(snapshot.get(other).is_none());
+        conf.set_key(&format!("components.wallpaperSelector.{key}"), json!(true));
+        conf.apply_selector_preset(mode, "No shadows");
+        assert_eq!(conf.depth_shadows(), mode != "depth");
+        assert_eq!(conf.slice_shadows(), mode != "slices");
+        assert!(!crate::app::layout_params(&conf).slices.shadows);
+    }
+}

@@ -18,6 +18,7 @@ fn card_actions_use_the_card_bottom_edge() {
         hex: false,
         hex_shape: HexShape::Hexagon,
         triangle_direction: 0,
+        quad: None,
     };
     assert_eq!(browser_card_action_at(&hit, 80.0, 140.0, 1.0), Some(BrowserCardAction::Save));
     assert_eq!(browser_card_action_at(&hit, 130.0, 140.0, 1.0), Some(BrowserCardAction::Apply));

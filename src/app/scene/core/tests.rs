@@ -91,6 +91,8 @@ fn test_scene(mode: Mode) -> SceneCore {
         corners: [8.0; 4],
         wobble: false,
         wobble_strength: 1.0,
+        parallax: false,
+        shadows: true,
     };
     let gp = base_gp();
     let hp = HexParams {
@@ -128,6 +130,8 @@ fn layout_crossfade_vs_morph() {
 
 fn test_extra() -> ExtraParams {
     ExtraParams {
+        depth: crate::frontend::scene::layout::DepthParams::default(),
+        collection: crate::frontend::scene::layout::CollectionParams::default(),
         sandy: sandy::SandyParams {
             offset_x: 0.0,
             offset_y: 0.0,
@@ -1478,6 +1482,18 @@ fn rendered_scene_with_count_bar_camera(
     bar: Option<(bool, f32, f32)>,
     camera: f32,
 ) -> std::sync::Arc<RenderSnapshot> {
+    rendered_scene_with_setup(mode, sp, gp, count, bar, camera, |_| {})
+}
+
+fn rendered_scene_with_setup(
+    mode: Mode,
+    sp: SliceParams,
+    gp: GridParams,
+    count: usize,
+    bar: Option<(bool, f32, f32)>,
+    camera: f32,
+    setup: impl FnOnce(&mut SceneCore),
+) -> std::sync::Arc<RenderSnapshot> {
     use std::sync::{Arc, Mutex};
     let hp = HexParams {
         r: 40.0,
@@ -1520,6 +1536,7 @@ fn rendered_scene_with_count_bar_camera(
     }
     scene.motion.entrance.snap(1.0);
     scene.motion.visibility.snap(1.0);
+    setup(&mut scene);
     scene.tick(
         Instant::now(),
         RebuildCtx {
@@ -1549,6 +1566,8 @@ fn base_sp() -> SliceParams {
         corners: [0.0; 4],
         wobble: false,
         wobble_strength: 1.0,
+        parallax: false,
+        shadows: true,
     }
 }
 
@@ -2939,5 +2958,606 @@ fn hand_steep_cuts_still_land_every_ribbon_on_its_back() {
             "{}",
             back.hh
         );
+    }
+}
+
+#[test]
+fn depth_cards_shrink_toward_edges_and_hits_follow_visible_bounds() {
+    let render = rendered_scene_with_count_and_bar(
+        Mode::Depth,
+        SliceParams { visible_count: 11, ..base_sp() },
+        base_gp(),
+        1000,
+        None,
+    );
+    assert!(render.hits.len() <= 24);
+    let center = render.hits.iter().find(|hit| hit.index == 0).unwrap();
+    let mut last = *center;
+    for idx in 1..5 {
+        let hit = render.hits.iter().find(|hit| hit.index == idx).unwrap();
+        assert!(hit.hw < last.hw && hit.hh < last.hh);
+        assert!(hit.cx > last.cx);
+        assert!((hit.cy - center.cy).abs() < 0.01);
+        assert!(hit.contains(hit.cx, hit.cy));
+        let body =
+            render.instances.iter().find(|body| (body.rect[0] - hit.cx).abs() < 0.01).unwrap();
+        assert_eq!(body.rect, [hit.cx, hit.cy, hit.hw, hit.hh]);
+        assert!(body.crop[0] >= 0.0 && body.crop[0] + body.crop[2] <= 1.001);
+        assert!(body.crop[1] >= 0.0 && body.crop[1] + body.crop[3] <= 1.001);
+        last = *hit;
+    }
+    assert_eq!(render.hits[0].index, 0);
+}
+
+#[test]
+fn depth_restored_selection_centers_and_flips_inline() {
+    let mut scene = test_scene(Mode::Depth);
+    scene.restore_selection(42, 100, None);
+    assert!(scene.layout_camera_anchor);
+    scene.position_slice_camera(scene.current as f32);
+    assert_eq!(scene.camera_pos(), 42.0);
+    scene.toggle_flip(42);
+    assert!(scene.flip_open());
+    assert_eq!(scene.card.det_target, 0.0);
+    scene.set_current(43, 100);
+    assert!(!scene.flip_open());
+}
+
+#[test]
+fn depth_position_drives_parallax_and_pointer_position_has_no_effect() {
+    let render = |camera: f32, pointer: (f32, f32)| {
+        rendered_scene_with_setup(
+            Mode::Depth,
+            SliceParams { visible_count: 11, slice_h: 520.0, ..base_sp() },
+            base_gp(),
+            11,
+            None,
+            0.0,
+            |scene| {
+                scene.current = 5;
+                scene.camera.snap(camera);
+                scene.last_mouse = Some(pointer);
+            },
+        )
+    };
+    let rest = render(5.0, (0.0, 0.0));
+    let pointer_moved = render(5.0, (1200.0, 700.0));
+    let scrolled = render(6.0, (0.0, 0.0));
+    let get = |snap: &RenderSnapshot, idx: usize| {
+        let hit = *snap.hits.iter().find(|hit| hit.index == idx).unwrap();
+        let body = *snap
+            .instances
+            .iter()
+            .find(|body| body.misc[0] > 0 && (body.rect[0] - hit.cx).abs() < 0.01)
+            .unwrap();
+        (hit, body)
+    };
+    let center = get(&rest, 5).0;
+    for distance in 1..=4 {
+        let left = get(&rest, 5 - distance).0;
+        let right = get(&rest, 5 + distance).0;
+        assert!((left.hw - right.hw).abs() < 0.01);
+        assert!((left.hh - right.hh).abs() < 0.01);
+        assert!((left.cx + right.cx - 2.0 * center.cx).abs() < 0.01);
+    }
+    for idx in 2..=8 {
+        let (_, before) = get(&rest, idx);
+        let (_, after) = get(&pointer_moved, idx);
+        assert_eq!(before.rect, after.rect);
+        assert_eq!(before.crop, after.crop);
+    }
+    let (_, middle) = get(&rest, 5);
+    let (after, art_after) = get(&scrolled, 5);
+    assert!(after.cx < center.cx);
+    let mid_crop = middle.crop[0] + middle.crop[2] * 0.5;
+    let shifted_crop = art_after.crop[0] + art_after.crop[2] * 0.5;
+    assert!(shifted_crop < mid_crop - middle.crop[2] * 0.05);
+    assert!((middle.crop[1] + middle.crop[3] * 0.5 - 0.5).abs() < 0.01);
+}
+
+#[test]
+fn depth_scroll_parallax_reaches_visual_completion_and_idles() {
+    let mut scene = test_scene(Mode::Depth);
+    scene.viewport = (1200.0, 700.0);
+    scene.motion.entrance.snap(1.0);
+    scene.motion.needs_frame = false;
+    assert!(!scene.is_animating());
+    scene.set_current(5, 20);
+    scene.position_slice_camera(5.0);
+    scene.motion.needs_frame = false;
+    assert!(scene.is_animating());
+    rebuild_collection_test(&mut scene, 20, 180);
+    assert!((scene.camera.x - 5.0).abs() * 300.0 < 0.5);
+    assert!(!scene.is_animating());
+}
+
+#[test]
+fn depth_parallax_keeps_moving_through_both_fading_edges_at_every_card_count() {
+    for visible_count in [3, 5, 8, 12, 21] {
+        let radius = (visible_count as f32 - 1.0) * 0.5;
+        for direction in [-1.0, 1.0] {
+            let mut previous = None;
+            for fade_distance in [0.1, 0.4, 0.7, 0.95] {
+                let distance = direction * (radius + fade_distance);
+                let render = rendered_scene_with_setup(
+                    Mode::Depth,
+                    SliceParams { visible_count, slice_h: 520.0, ..base_sp() },
+                    base_gp(),
+                    31,
+                    None,
+                    0.0,
+                    |scene| {
+                        scene.current = 15;
+                        scene.camera.snap(15.0 - distance);
+                    },
+                );
+                let hit = render.hits.iter().find(|hit| hit.index == 15).unwrap();
+                let body = render
+                    .instances
+                    .iter()
+                    .find(|body| body.misc[0] > 0 && (body.rect[0] - hit.cx).abs() < 0.01)
+                    .unwrap();
+                let pan = body.crop[0] / (1.0 - body.crop[2]);
+                assert!(
+                    pan > 0.0 && pan < 1.0,
+                    "count={visible_count}, distance={distance}, pan={pan}"
+                );
+                if let Some(before) = previous {
+                    assert!(
+                        (pan - before) * direction > 0.001,
+                        "image stopped at count={visible_count}, distance={distance}"
+                    );
+                }
+                previous = Some(pan);
+            }
+        }
+    }
+}
+
+#[test]
+fn optional_parallax_changes_art_without_moving_cards_or_hiding_badges() {
+    for mode in [Mode::Slices, Mode::Hex] {
+        let render = |enabled| {
+            rendered_scene_with_setup(mode, base_sp(), base_gp(), 31, None, 0.0, |scene| {
+                scene.sp.parallax = enabled;
+                scene.sp_target = scene.sp;
+                scene.hp.parallax = enabled;
+                scene.hp_target = scene.hp;
+                scene.camera.snap(250.0);
+            })
+        };
+        let off = render(false);
+        let on = render(true);
+        assert_eq!(off.hits.len(), on.hits.len());
+        for (a, b) in off.hits.iter().zip(&on.hits) {
+            assert_eq!((a.index, a.cx, a.cy, a.hw, a.hh), (b.index, b.cx, b.cy, b.hw, b.hh));
+        }
+        for (a, b) in off.chrome.iter().zip(&on.chrome) {
+            assert_eq!(a.opacity, b.opacity);
+        }
+        let off_art: Vec<_> = off.instances.iter().filter(|body| body.misc[0] > 0).collect();
+        let on_art: Vec<_> = on.instances.iter().filter(|body| body.misc[0] > 0).collect();
+        assert!(!off_art.is_empty());
+        assert_eq!(off_art.len(), on_art.len());
+        assert!(off_art.iter().zip(on_art).all(|(a, b)| a.crop != b.crop));
+    }
+}
+
+#[test]
+fn optional_parallax_keeps_moving_at_visible_layout_edges() {
+    for mode in [Mode::Slices, Mode::Hex] {
+        for side in [-1.0, 1.0] {
+            let mut last_pan = None;
+            for step in [0.0, 10.0, 20.0] {
+                let render =
+                    rendered_scene_with_setup(mode, base_sp(), base_gp(), 31, None, 0.0, |scene| {
+                        scene.sp.parallax = true;
+                        scene.sp_target = scene.sp;
+                        scene.hp.parallax = true;
+                        scene.hp_target = scene.hp;
+                        let distance = match mode {
+                            Mode::Slices => 320.0 - step,
+                            _ => 620.0 - step,
+                        } * side;
+                        let item_center = match mode {
+                            Mode::Slices => 208.0 + 4.0 * 88.0 + 40.0,
+                            _ => scene.hp.column_x(5 / scene.hp.rows),
+                        };
+                        scene.camera.snap(item_center - distance);
+                    });
+                let hit = render.hits.iter().find(|hit| hit.index == 5).unwrap();
+                let body = render
+                    .instances
+                    .iter()
+                    .find(|body| {
+                        body.misc[0] > 0
+                            && (body.rect[0] - hit.cx).abs() < 0.01
+                            && (body.rect[1] - hit.cy).abs() < 0.01
+                    })
+                    .unwrap();
+                let pan = body.crop[0] / (1.0 - body.crop[2]);
+                assert!(pan > 0.0 && pan < 1.0, "{mode:?} edge crop saturated: {pan}");
+                if let Some(before) = last_pan {
+                    assert!((before - pan) * side > 0.001, "{mode:?} edge crop stopped");
+                }
+                last_pan = Some(pan);
+            }
+        }
+    }
+}
+
+fn rebuild_collection_test(scene: &mut SceneCore, count: usize, frames: usize) {
+    use std::sync::{Arc, Mutex};
+    let uploads: UploadQueue = Arc::new(Mutex::new(Vec::new()));
+    let (tx, _rx) = futures_channel::mpsc::unbounded();
+    let pool = DecodePool::start(uploads.clone(), tx, 0);
+    let catalog = Catalog {
+        items: (0..count)
+            .map(|idx| Wallpaper {
+                key: format!("collection-{idx}"),
+                width: 1920,
+                height: 1080,
+                ..Default::default()
+            })
+            .collect(),
+        ..Default::default()
+    };
+    let filtered: Vec<u32> = (0..count as u32).collect();
+    let mut atlas = None;
+    let palette = Palette::default();
+    let start = scene.motion.last_tick.unwrap_or_else(Instant::now);
+    for frame in 1..=frames {
+        scene.tick(
+            start + Duration::from_secs_f32(frame as f32 / 60.0),
+            RebuildCtx {
+                catalog: &catalog,
+                filtered: &filtered,
+                atlas: &mut atlas,
+                pool: &pool,
+                palette: &palette,
+                uploads: &uploads,
+                hover_fades: None,
+            },
+        );
+    }
+}
+
+#[test]
+fn collection_stack_is_bounded_and_visible_at_library_edges() {
+    for viewport in [(1440.0, 900.0), (420.0, 760.0), (900.0, 420.0)] {
+        for count in [0usize, 1, 3, 100_000] {
+            for idx in [0, count / 2, count.saturating_sub(1)] {
+                let mut scene = test_scene(Mode::Collection);
+                scene.viewport = viewport;
+                scene.reset_to_index(idx, count);
+                rebuild_collection_test(&mut scene, count, 120);
+                assert!(!scene.is_animating());
+                assert!(scene.render.hits.len() <= 9);
+                if count == 0 {
+                    assert!(scene.render.hits.is_empty());
+                    continue;
+                }
+                let hit = scene.render.hits.iter().find(|hit| hit.index == idx).unwrap();
+                let quad = hit.quad.unwrap();
+                let top = ((quad[0][0] + quad[1][0]) * 0.5, quad[0][1] + 5.0);
+                assert!(top.0 > 0.0 && top.0 < viewport.0);
+                assert!(top.1 > 0.0 && top.1 < viewport.1);
+                assert_eq!(
+                    scene.render.hits.iter().find(|h| h.contains(top.0, top.1)).unwrap().index,
+                    idx
+                );
+                assert!(scene.render.chrome.iter().all(|chrome| chrome.opacity == 0.0));
+            }
+        }
+    }
+}
+
+#[test]
+fn collection_expands_to_landscape_and_closes_without_idle_frames() {
+    let mut scene = test_scene(Mode::Collection);
+    scene.viewport = (1440.0, 900.0);
+    scene.reset_to_index(10, 30);
+    rebuild_collection_test(&mut scene, 30, 120);
+    scene.select_collection(10, 30);
+    assert!(scene.is_animating());
+    rebuild_collection_test(&mut scene, 30, 90);
+    assert!(!scene.is_animating());
+    assert!(scene.collection_open.x >= 0.999);
+    let hit = &scene.render.hits[0];
+    assert_eq!(hit.index, 10);
+    assert!((hit.hw / hit.hh - 16.0 / 9.0).abs() < 0.02);
+    assert_eq!(scene.render.chrome.iter().filter(|c| c.opacity > 0.0).count(), 1);
+    assert!(scene.close_collection());
+    rebuild_collection_test(&mut scene, 30, 90);
+    assert!(!scene.is_animating());
+    assert_eq!(scene.collection_card, None);
+    assert!(scene.collection_open.x <= 0.001);
+}
+
+#[test]
+fn collection_navigation_and_filter_reset_cancel_expansion() {
+    let mut scene = test_scene(Mode::Collection);
+    scene.viewport = (1440.0, 900.0);
+    scene.select_collection(20, 100);
+    rebuild_collection_test(&mut scene, 100, 120);
+    scene.slice_scroll(-1.0, 100);
+    assert!(scene.current > 20);
+    rebuild_collection_test(&mut scene, 100, 120);
+    assert!(!scene.is_animating());
+    assert_eq!(scene.collection_card, None);
+    scene.select_collection(30, 100);
+    scene.reset_to_index(0, 2);
+    rebuild_collection_test(&mut scene, 2, 120);
+    assert_eq!(scene.collection_open.x, 0.0);
+    assert_eq!(scene.collection_card, None);
+    assert!(scene.render.hits.iter().all(|hit| hit.index < 2));
+    scene.select_collection(0, 2);
+    scene.set_mode(Mode::Slices);
+    assert_eq!(scene.collection_open.x, 0.0);
+    assert_eq!(scene.collection_card, None);
+}
+
+#[test]
+fn depth_falloff_and_spacing_change_rendered_cards() {
+    let render = |falloff, spacing| {
+        rendered_scene_with_setup(
+            Mode::Depth,
+            SliceParams { visible_count: 7, ..base_sp() },
+            base_gp(),
+            30,
+            None,
+            0.0,
+            |scene| {
+                scene.xp.depth.falloff = falloff;
+                scene.xp.depth.spacing = spacing;
+                scene.xp_target = scene.xp;
+            },
+        )
+    };
+    let flat = render(0.0, 140.0);
+    let deep = render(0.8, 140.0);
+    let wide = render(0.0, 220.0);
+    let hit = |r: &RenderSnapshot, idx| {
+        let h = r.hits.iter().find(|h| h.index == idx).unwrap();
+        (h.cx, h.hw)
+    };
+    assert!((hit(&flat, 0).1 - hit(&flat, 2).1).abs() < 0.1);
+    assert!(hit(&deep, 2).1 < hit(&deep, 0).1 * 0.5);
+    assert!(hit(&wide, 1).0 - hit(&wide, 0).0 > hit(&flat, 1).0 - hit(&flat, 0).0);
+}
+
+#[test]
+fn collection_settings_change_geometry_and_settle() {
+    let mut scene = test_scene(Mode::Collection);
+    scene.viewport = (1440.0, 900.0);
+    scene.reset_to_index(10, 30);
+    rebuild_collection_test(&mut scene, 30, 120);
+    let before = *scene.render.hits.iter().find(|h| h.index == 10).unwrap();
+    let mut params = scene.xp;
+    params.collection.size = 25.0;
+    params.collection.tilt = 0.0;
+    params.collection.count = 3.0;
+    params.collection.corners = 30.0;
+    scene.set_params(scene.sp, scene.gp, scene.hp, params, true);
+    rebuild_collection_test(&mut scene, 30, 180);
+    assert!(!scene.is_animating());
+    let after = scene.render.hits.iter().find(|h| h.index == 10).unwrap();
+    assert!(after.hw < before.hw);
+    assert!((after.hw - after.hh).abs() < 0.1);
+    assert_eq!(scene.render.hits.len(), 3);
+    assert!(scene.render.instances.iter().any(|i| i.radii == [30.0; 4]));
+}
+
+#[test]
+fn layout_motion_speed_changes_navigation_and_collection_opening() {
+    for mode in [Mode::Depth, Mode::Collection] {
+        let mut slow = test_scene(mode);
+        let mut fast = test_scene(mode);
+        for (scene, speed) in [(&mut slow, 25.0), (&mut fast, 300.0)] {
+            let mut params = scene.xp;
+            params.depth.navigation_ms = 25000.0 / speed;
+            params.collection.speed = speed;
+            scene.set_params(scene.sp, scene.gp, scene.hp, params, false);
+            scene.camera.retarget(10.0);
+            scene.collection_open.retarget(1.0);
+            scene.camera.tick(0.05);
+            scene.collection_open.tick(0.05);
+        }
+        assert!(fast.camera.x > slow.camera.x);
+        assert!(fast.collection_open.x > slow.collection_open.x);
+        for _ in 0..300 {
+            fast.camera.tick(1.0 / 60.0);
+            slow.camera.tick(1.0 / 60.0);
+        }
+        assert!((slow.camera.x - 10.0).abs() < 0.001);
+        assert!((fast.camera.x - 10.0).abs() < 0.001);
+    }
+}
+
+#[test]
+fn depth_camera_finishes_below_a_pixel_without_a_final_snap() {
+    for duration in [83.0, 250.0, 1000.0, 4000.0] {
+        let mut scene = test_scene(Mode::Depth);
+        let mut params = scene.xp;
+        params.depth.navigation_ms = duration;
+        scene.set_params(scene.sp, scene.gp, scene.hp, params, false);
+        scene.camera.snap(10.0);
+        scene.camera.retarget(11.0);
+        let mut previous = scene.camera.x;
+        let mut finished = false;
+        for _ in 0..2400 {
+            scene.camera.tick_with_precision(1.0 / 60.0, scene.camera_precision());
+            assert!(scene.camera.x >= previous);
+            if scene.camera_settled() {
+                assert!(
+                    (scene.camera.x - previous).abs() * scene.xp.depth.spacing < 0.1,
+                    "duration={duration}"
+                );
+                finished = true;
+                break;
+            }
+            previous = scene.camera.x;
+        }
+        assert!(finished, "duration={duration}");
+    }
+}
+
+#[test]
+fn depth_selection_frame_does_not_change_geometry_or_selected_brightness() {
+    let render = |enabled| {
+        rendered_scene_with_setup(Mode::Depth, base_sp(), base_gp(), 30, None, 0.0, |scene| {
+            scene.xp.depth.selection_frame = enabled;
+            scene.xp_target = scene.xp;
+        })
+    };
+    let on = render(true);
+    let off = render(false);
+    let art = |r: &RenderSnapshot| {
+        *r.instances.iter().find(|i| i.misc[0] > 0 && i.tint[3] == 0.0).unwrap()
+    };
+    let on = art(&on);
+    let off = art(&off);
+    assert_eq!(on.rect, off.rect);
+    assert_eq!(on.tint, off.tint);
+    assert_eq!(on.params[1], 3.0);
+    assert_eq!(off.params[1], 0.0);
+    assert_eq!(off.border, [0.0; 4]);
+    assert_ne!(on.border, off.border);
+}
+
+#[test]
+fn depth_width_and_spacing_are_independent_of_height() {
+    let render = |height| {
+        rendered_scene_with_setup(
+            Mode::Depth,
+            SliceParams { slice_h: height, visible_count: 3, ..base_sp() },
+            base_gp(),
+            30,
+            None,
+            0.0,
+            |scene| {
+                scene.xp.depth.width = 100.0;
+                scene.xp.depth.spacing = 150.0;
+                scene.xp.depth.falloff = 0.0;
+                scene.xp_target = scene.xp;
+            },
+        )
+    };
+    let low = render(200.0);
+    let high = render(300.0);
+    for idx in [0, 1] {
+        let a = low.hits.iter().find(|h| h.index == idx).unwrap();
+        let b = high.hits.iter().find(|h| h.index == idx).unwrap();
+        assert_eq!(a.hw, 50.0);
+        assert_eq!(b.hw, 50.0);
+        assert_eq!(a.cx, b.cx);
+        assert_eq!(a.hh, 100.0);
+        assert_eq!(b.hh, 150.0);
+    }
+    let a = low.hits.iter().find(|h| h.index == 0).unwrap();
+    let b = low.hits.iter().find(|h| h.index == 1).unwrap();
+    assert!((b.cx - a.cx - 150.0).abs() < 0.01);
+}
+
+#[test]
+fn depth_edge_cards_reach_transparency_before_they_are_removed() {
+    let opacity = |fade: f32| {
+        let render = rendered_scene_with_setup(
+            Mode::Depth,
+            SliceParams { visible_count: 5, ..base_sp() },
+            base_gp(),
+            31,
+            None,
+            0.0,
+            |scene| {
+                scene.current = 15;
+                scene.camera.snap(15.0 - 2.0 - fade);
+            },
+        );
+        render.hits.iter().find(|hit| hit.index == 15).map_or(0.0, |hit| {
+            render
+                .instances
+                .iter()
+                .find(|body| body.misc[0] > 0 && (body.rect[0] - hit.cx).abs() < 0.01)
+                .unwrap()
+                .params[2]
+        })
+    };
+    assert!((opacity(0.5) - 0.5).abs() < 0.001);
+    assert!(opacity(0.9) < 0.03);
+    assert!(opacity(0.99) > 0.0 && opacity(0.99) < 0.001);
+    assert_eq!(opacity(0.999), 0.0);
+}
+
+#[test]
+fn depth_frame_off_removes_borders_during_hover_and_selection_animation() {
+    for hover in [None, Some(0), Some(1)] {
+        let snap =
+            rendered_scene_with_setup(Mode::Depth, base_sp(), base_gp(), 30, None, 0.0, |scene| {
+                scene.xp.depth.selection_frame = false;
+                scene.xp_target = scene.xp;
+                scene.hover = hover;
+                scene
+                    .card
+                    .selection
+                    .insert(0, crate::frontend::animation::Spring::for_duration_ms(0.5, 250.0));
+            });
+        let bodies: Vec<_> = snap.instances.iter().filter(|i| i.misc[0] > 0).collect();
+        assert!(!bodies.is_empty());
+        for body in bodies {
+            assert_eq!(body.params[1], 0.0);
+            assert_eq!(body.border, [0.0; 4]);
+        }
+    }
+}
+
+#[test]
+fn depth_and_slices_shadows_toggle_without_changing_cards() {
+    for mode in [Mode::Depth, Mode::Slices] {
+        let on = rendered_scene(mode, base_sp(), base_gp());
+        let off = rendered_scene(mode, SliceParams { shadows: false, ..base_sp() }, base_gp());
+        let bodies = |snap: &RenderSnapshot| {
+            snap.instances
+                .iter()
+                .filter(|i| i.misc[0] > 0)
+                .map(|i| (i.rect, i.border, i.tint))
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(bodies(&on), bodies(&off));
+        let shadow = |i: &&crate::frontend::scene::InstanceRaw| {
+            i.fill[0..3] == [0.0; 3] && (i.fill[3] == 0.3 || i.fill[3] == 0.5) && i.misc[0] == 0
+        };
+        assert_eq!(on.instances.iter().filter(shadow).count(), on.hits.len());
+        assert_eq!(off.instances.iter().filter(shadow).count(), 0);
+        assert_eq!(on.instances.len() - off.instances.len(), on.hits.len());
+    }
+}
+
+#[test]
+fn unframed_depth_rectangles_use_clean_edges_without_affecting_rounded_or_skewed_cards() {
+    for (mode, enabled, corners, skew, clean) in [
+        (Mode::Depth, false, [0.0; 4], 0.0, true),
+        (Mode::Depth, true, [0.0; 4], 0.0, false),
+        (Mode::Depth, false, [12.0; 4], 0.0, false),
+        (Mode::Depth, false, [0.0; 4], 20.0, false),
+        (Mode::Slices, false, [0.0; 4], 0.0, false),
+    ] {
+        let snap = rendered_scene_with_setup(
+            mode,
+            SliceParams { skew, corners, ..base_sp() },
+            base_gp(),
+            30,
+            None,
+            0.0,
+            |scene| {
+                scene.xp.depth.selection_frame = enabled;
+                scene.xp_target = scene.xp;
+            },
+        );
+        let bodies: Vec<_> = snap.instances.iter().filter(|i| i.misc[0] > 0).collect();
+        assert!(!bodies.is_empty());
+        for body in bodies {
+            assert_eq!(body.misc[3] & crate::rendering::scene::UNFRAMED_RECT != 0, clean);
+        }
     }
 }

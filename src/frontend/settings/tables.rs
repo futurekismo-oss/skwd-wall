@@ -69,7 +69,8 @@ pub fn is_transition_preview_section(tab: &str, section: usize) -> bool {
     tab == "motion" && section == WALLPAPER_TRANSITIONS
 }
 
-pub(super) const MODES: [&str; 5] = ["slices", "hex", "wall", "sandy", "hand"];
+pub(super) const MODES: [&str; 7] =
+    ["slices", "depth", "hex", "wall", "sandy", "hand", "collection"];
 pub(super) const POST_TYPES: [&str; 4] =
     ["all", wallpaper_kind::STATIC, wallpaper_kind::VIDEO, wallpaper_kind::WE];
 pub(super) const FILL_MODES: [&str; 6] = ["fill", "fit", "stretch", "center", "tile", "span"];

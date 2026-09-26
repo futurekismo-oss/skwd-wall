@@ -91,6 +91,9 @@ fn set_view_mode() {
     assert_eq!(saved["components"]["wallpaperSelector"]["displayMode"], "wall");
     let _ = update(&mut app, Message::SetViewMode(String::from("hex")));
     assert_eq!(app.scene.mode, Mode::Hex);
+    let _ = update(&mut app, Message::SetViewMode(String::from("collection")));
+    assert_eq!(app.scene.mode, Mode::Collection);
+    assert_eq!(app.config.display_mode(), "collection");
 }
 
 #[test]
@@ -106,6 +109,7 @@ fn shader_mode_degrades() {
         ("sandy", Mode::Sandy),
         ("nova", Mode::Sandy),
         ("hand", Mode::Hand),
+        ("depth", Mode::Depth),
     ] {
         let cfg = Config::from_data(json!({
             "components": {"wallpaperSelector": {"displayMode": name}}
@@ -377,4 +381,57 @@ fn picker_monitor_apply_requires_known_monitor() {
     assert!(drain_calls(&app).iter().all(|(method, _)| method != "wall.apply"));
     assert_eq!(app.config.str_path(skwd_config::keys::selector::LAST_APPLIED_KEY), "previous");
     assert!(app.runtime_state.toast.is_some());
+}
+
+#[test]
+fn optional_parallax_reaches_each_layout_independently() {
+    for (slices, hex) in [(false, false), (true, false), (false, true), (true, true)] {
+        let config = Config::from_data(json!({"components":{"wallpaperSelector":{
+            "sliceParallax":slices,"hexParallax":hex
+        }}}));
+        let params = layout_params(&config);
+        assert_eq!(params.slices.parallax, slices);
+        assert_eq!(params.hex.parallax, hex);
+    }
+    let defaults = layout_params(&Config::from_data(json!({})));
+    assert!(!defaults.slices.parallax && !defaults.hex.parallax);
+}
+
+#[test]
+fn depth_settings_do_not_change_slices() {
+    let mut config = Config::from_data(json!({"components":{"wallpaperSelector":{
+        "displayMode":"depth", "depthHeight":650, "depthCount":7, "depthCorners":24,
+        "depthSkew":0, "sliceHeight":360, "visibleCount":10
+    }}}));
+    let depth = super::super::startup::layout_params(&config);
+    assert_eq!(depth.slices.slice_h, 650.0);
+    assert_eq!(depth.slices.visible_count, 7);
+    assert_eq!(depth.slices.corners, [24.0; 4]);
+    config.set_key(skwd_config::keys::selector::DISPLAY_MODE, json!("slices"));
+    let slices = super::super::startup::layout_params(&config);
+    assert_eq!(slices.slices.slice_h, 360.0);
+    assert_eq!(slices.slices.visible_count, 10);
+}
+
+#[test]
+fn depth_default_profile_reaches_the_scene_and_matches_render_defaults() {
+    let config =
+        Config::from_data(json!({"components":{"wallpaperSelector":{"displayMode":"depth"}}}));
+    let params = layout_params(&config);
+    let fallback = crate::frontend::scene::layout::DepthParams::default();
+    assert_eq!(params.slices.slice_h, 520.0);
+    assert_eq!(params.slices.visible_count, 5);
+    assert_eq!(params.slices.corners, [0.0; 4]);
+    assert_eq!(params.slices.skew, 0.0);
+    assert!(!config.depth_shadows());
+    assert!(!params.extra.depth.selection_frame);
+    assert_eq!(params.extra.depth.width, 280.0);
+    assert_eq!(params.extra.depth.spacing, 280.0);
+    assert_eq!(params.extra.depth.falloff, 0.05);
+    assert_eq!(params.extra.depth.navigation_ms, 1000.0);
+    assert_eq!(params.extra.depth.selection_frame, fallback.selection_frame);
+    assert_eq!(params.extra.depth.width, fallback.width);
+    assert_eq!(params.extra.depth.spacing, fallback.spacing);
+    assert_eq!(params.extra.depth.falloff, fallback.falloff);
+    assert_eq!(params.extra.depth.navigation_ms, fallback.navigation_ms);
 }

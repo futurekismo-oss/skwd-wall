@@ -106,7 +106,7 @@ impl SceneCore {
     }
 
     fn flip_closed(&self) -> bool {
-        if matches!(self.mode, Mode::Slices | Mode::Sandy | Mode::Hand) {
+        if matches!(self.mode, Mode::Slices | Mode::Depth | Mode::Sandy | Mode::Hand) {
             return self.card.flip.settled() && self.card.flip.target == 0.0;
         }
         self.card.det_target == 0.0 && self.card.det_p <= 0.001
@@ -137,7 +137,11 @@ impl SceneCore {
         self.motion.visibility.tick(dt);
         self.motion.center_inset.tick(dt);
         self.morph_params(dt);
-        self.camera.tick(dt);
+        self.camera.tick_with_precision(dt, self.camera_precision());
+        self.collection_open.tick(dt);
+        if self.collection_open.target == 0.0 && self.collection_open.settled() {
+            self.collection_card = None;
+        }
         for spr in self.card.widths.values_mut() {
             spr.tick(dt);
         }
@@ -154,10 +158,11 @@ impl SceneCore {
             spr.tick(dt);
         }
         self.card.hex_scales.retain(|_, spr| !(spr.settled() && spr.target == 0.0));
+        let precision = if self.mode == Mode::Depth { 0.001 } else { 0.05 };
         for spr in self.card.selection.values_mut() {
-            spr.tick(dt);
+            spr.tick_with_precision(dt, precision);
         }
-        self.card.selection.retain(|_, spr| !spr.settled());
+        self.card.selection.retain(|_, spr| !spr.settled_with_precision(precision));
     }
 
     fn tick_transition(&mut self, dt: f32) {

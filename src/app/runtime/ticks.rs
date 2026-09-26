@@ -68,7 +68,7 @@ impl App {
     }
 
     pub(in crate::app) fn detail_open(&self) -> bool {
-        self.scene.mode != Mode::Slices && self.scene.flip_open()
+        !matches!(self.scene.mode, Mode::Slices | Mode::Depth) && self.scene.flip_open()
     }
 
     pub(in crate::app) fn wants_transition_preview(&self) -> bool {

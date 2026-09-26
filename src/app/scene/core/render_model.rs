@@ -50,6 +50,14 @@ impl SceneCore {
                 self.rebuild_slices(&mut ctx, &mut sinks, entrance);
                 None
             }
+            Mode::Depth => {
+                self.rebuild_depth(&mut ctx, &mut sinks, entrance);
+                None
+            }
+            Mode::Collection => {
+                self.rebuild_collection(&mut ctx, &mut sinks, entrance);
+                None
+            }
             Mode::Grid => self.rebuild_grid(&mut ctx, &mut sinks, entrance),
             Mode::Hex => {
                 self.rebuild_hex(&mut ctx, &mut sinks, entrance);
@@ -109,7 +117,7 @@ impl SceneCore {
             chrome,
             placeholders,
             back: self.card.pending_back.take(),
-            overlay: self.mode != Mode::Slices && self.card.det_p > 0.05,
+            overlay: !matches!(self.mode, Mode::Slices | Mode::Depth) && self.card.det_p > 0.05,
         });
     }
 
@@ -245,6 +253,7 @@ impl SceneCore {
             hex: spec.hex,
             hex_shape: layout::HexShape::Hexagon,
             triangle_direction: 0,
+            quad: None,
         };
         (body, hit)
     }

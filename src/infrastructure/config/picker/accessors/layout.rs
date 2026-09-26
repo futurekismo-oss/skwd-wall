@@ -3,6 +3,59 @@ use serde_json::Value;
 use super::super::Config;
 
 impl Config {
+    pub fn slice_shadows(&self) -> bool {
+        skwd_config::schema::setting::selector::SLICE_SHADOWS.read(self.root())
+    }
+
+    pub fn depth_shadows(&self) -> bool {
+        skwd_config::schema::setting::selector::DEPTH_SHADOWS.read(self.root())
+    }
+
+    pub fn depth_selection_frame(&self) -> bool {
+        skwd_config::schema::setting::selector::DEPTH_SELECTION_FRAME.read(self.root())
+    }
+    pub fn depth_height(&self) -> f32 {
+        skwd_config::schema::setting::selector::DEPTH_HEIGHT.read(self.root()) as f32
+    }
+    pub fn depth_width(&self) -> f32 {
+        skwd_config::schema::setting::selector::DEPTH_WIDTH_PX.read(self.root()) as f32
+    }
+    pub fn depth_spacing(&self) -> f32 {
+        skwd_config::schema::setting::selector::DEPTH_SPACING_PX.read(self.root()) as f32
+    }
+    pub fn depth_count(&self) -> f32 {
+        skwd_config::schema::setting::selector::DEPTH_COUNT.read(self.root()) as f32
+    }
+    pub fn depth_falloff(&self) -> f32 {
+        skwd_config::schema::setting::selector::DEPTH_FALLOFF_FACTOR.read(self.root()) as f32
+    }
+    pub fn depth_corners(&self) -> f32 {
+        skwd_config::schema::setting::selector::DEPTH_CORNERS.read(self.root()) as f32
+    }
+    pub fn depth_skew(&self) -> f32 {
+        skwd_config::schema::setting::selector::DEPTH_SKEW.read(self.root()) as f32
+    }
+    pub fn depth_navigation_ms(&self) -> f32 {
+        skwd_config::schema::setting::selector::DEPTH_NAVIGATION_MS.read(self.root()) as f32
+    }
+    pub fn collection_size(&self) -> f32 {
+        skwd_config::schema::setting::selector::COLLECTION_SIZE.read(self.root()) as f32
+    }
+    pub fn collection_spacing(&self) -> f32 {
+        skwd_config::schema::setting::selector::COLLECTION_SPACING.read(self.root()) as f32
+    }
+    pub fn collection_count(&self) -> f32 {
+        skwd_config::schema::setting::selector::COLLECTION_COUNT.read(self.root()) as f32
+    }
+    pub fn collection_tilt(&self) -> f32 {
+        skwd_config::schema::setting::selector::COLLECTION_TILT.read(self.root()) as f32
+    }
+    pub fn collection_corners(&self) -> f32 {
+        skwd_config::schema::setting::selector::COLLECTION_CORNERS.read(self.root()) as f32
+    }
+    pub fn collection_speed(&self) -> f32 {
+        skwd_config::schema::setting::selector::COLLECTION_SPEED.read(self.root()) as f32
+    }
     pub fn slice_position(&self) -> (f32, f32) {
         use skwd_config::schema::setting::selector as sel;
         (

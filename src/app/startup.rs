@@ -232,7 +232,7 @@ pub(crate) fn layout_params(config: &Config) -> LayoutParams {
     let mode_name = std::env::var("SKWD_WALL_MODE").unwrap_or_else(|_| config.display_mode());
     let mode = Mode::from_key(&mode_name);
     let (slice_x, slice_y) = config.slice_position();
-    let sp = SliceParams {
+    let mut sp = SliceParams {
         offset_x: slice_x,
         offset_y: slice_y,
         slice_w: config.slice_width(),
@@ -243,9 +243,18 @@ pub(crate) fn layout_params(config: &Config) -> LayoutParams {
         edge_tilt: config.slice_edge_tilt(),
         visible_count: config.visible_count(),
         corners: config.slice_corners(),
+        parallax: config.slice_parallax(),
+        shadows: config.slice_shadows(),
         wobble: config.slice_wobble(),
         wobble_strength: config.slice_wobble_strength(),
     };
+    if mode == Mode::Depth {
+        sp.shadows = config.depth_shadows();
+        sp.slice_h = config.depth_height();
+        sp.visible_count = config.depth_count() as usize;
+        sp.corners = [config.depth_corners(); 4];
+        sp.skew = config.depth_skew();
+    }
     let [
         grid_x,
         grid_y,
@@ -296,6 +305,7 @@ pub(crate) fn layout_params(config: &Config) -> LayoutParams {
         hex_depth_angle,
     ] = config.hex_stage();
     let hp = HexParams {
+        parallax: config.hex_parallax(),
         r: config.hex_radius().max(MIN_HEX_R),
         rows: config.hex_rows(),
         cols: config.hex_cols(),
@@ -327,6 +337,22 @@ pub(crate) fn layout_params(config: &Config) -> LayoutParams {
     };
     let (sandy_x, sandy_y) = config.sandy_position();
     let xp = ExtraParams {
+        depth: crate::frontend::scene::layout::DepthParams {
+            selection_frame: config.depth_selection_frame(),
+            width: config.depth_width(),
+            spacing: config.depth_spacing(),
+            falloff: config.depth_falloff(),
+            navigation_ms: config.depth_navigation_ms(),
+        },
+        collection: crate::frontend::scene::layout::CollectionParams {
+            size: config.collection_size(),
+            spacing: config.collection_spacing(),
+            count: config.collection_count(),
+            tilt: config.collection_tilt(),
+            corners: config.collection_corners(),
+            speed: config.collection_speed(),
+        },
+
         sandy: crate::frontend::scene::sandy::SandyParams {
             offset_x: sandy_x,
             offset_y: sandy_y,

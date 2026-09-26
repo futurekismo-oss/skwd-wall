@@ -1521,3 +1521,39 @@ fn matugen_settings_offer_smart_mode_and_scheme() {
                 if path == key && current == expected && options.iter().any(|(value, _)| value == expected))));
     }
 }
+
+#[test]
+fn selector_parallax_toggle_belongs_to_the_active_layout() {
+    for (mode, own, other) in [
+        ("slices", keys::selector::SLICE_PARALLAX, keys::selector::HEX_PARALLAX),
+        ("hex", keys::selector::HEX_PARALLAX, keys::selector::SLICE_PARALLAX),
+    ] {
+        for enabled in [false, true] {
+            let cfg = cfg().with_text(keys::selector::DISPLAY_MODE, mode).with_flag(own, enabled);
+            let mut builder = Builder { cfg: &cfg, cards: Vec::new() };
+            selector_tab::tab_selector(&mut builder);
+            let rows: Vec<_> = builder.cards.iter().flat_map(|(_, rows)| rows).collect();
+            assert!(rows.iter().any(|row| matches!(&row.control,
+                Control::Toggle { path, value } if path == own && *value == enabled)));
+            assert!(!rows.iter().any(|row| matches!(&row.control,
+                Control::Toggle { path, .. } if path == other)));
+        }
+    }
+}
+
+#[test]
+fn collection_settings_include_own_controls_and_presets() {
+    let cfg = cfg().with_text(keys::selector::DISPLAY_MODE, "collection");
+    let cards = build_tab("picker", &cfg, &[], &[], "", &[]);
+    let rows: Vec<_> = cards.iter().flat_map(|(_, rows)| rows).collect();
+    assert!(rows.iter().any(|row| matches!(&row.control, Control::Chips { options, .. }
+        if options.iter().any(|(key, _)| key == "collection"))));
+    assert!(
+        rows.iter().any(|row| matches!(&row.control, Control::Number { path, .. } if path == keys::selector::COLLECTION_SIZE))
+    );
+    assert!(
+        rows.iter().any(
+            |row| matches!(&row.control, Control::Presets { mode, .. } if mode == "collection")
+        )
+    );
+}

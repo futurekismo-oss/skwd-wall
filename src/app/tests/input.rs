@@ -1186,7 +1186,7 @@ fn outside_click_dismisses_one_overlay_at_a_time() {
 #[test]
 fn outside_click_closes_card_back_in_every_layout() {
     use crate::domain::input::MouseButton;
-    for mode in [Mode::Slices, Mode::Hex, Mode::Grid, Mode::Sandy, Mode::Hand] {
+    for mode in [Mode::Slices, Mode::Depth, Mode::Hex, Mode::Grid, Mode::Sandy, Mode::Hand] {
         let mut app = test_app();
         seed(&mut app, &[wall("a", "static", 10, 1)]);
         app.scene.mode = mode;
@@ -1210,4 +1210,86 @@ fn outside_right_click_keeps_picker_and_overlay_open() {
     app.input.help_open = true;
     let _ = update(&mut app, Message::Click(0.0, 0.0, MouseButton::Right));
     assert!(app.input.help_open);
+}
+
+#[test]
+fn collection_click_previews_escape_returns_and_enter_applies() {
+    use crate::domain::input::MouseButton;
+    let mut app = test_app();
+    let walls: Vec<Value> = (0..20).map(|i| wall(&format!("c{i}"), "static", i * 10, i)).collect();
+    seed(&mut app, &walls);
+    let _ = update(&mut app, Message::SetViewMode(String::from("collection")));
+    let mut now = Instant::now();
+    tick_frames(&mut app, &mut now, 120);
+    let hit = app.scene.render.hits.iter().find(|hit| hit.index == 3).unwrap();
+    let quad = hit.quad.unwrap();
+    let x = (quad[0][0] + quad[1][0]) * 0.5;
+    let y = quad[0][1] + 5.0;
+    let _ = update(&mut app, Message::Click(x, y, MouseButton::Left));
+    tick_frames(&mut app, &mut now, 90);
+    assert_eq!(app.scene.current, 3);
+    assert_eq!(app.scene.render.hits[0].index, 3);
+    assert_eq!(app.scene.render.chrome.iter().filter(|c| c.opacity > 0.0).count(), 1);
+    assert!(!drain_calls(&app).iter().any(|(method, _)| method == "wall.apply"));
+    let _ = update(&mut app, Message::Exit);
+    tick_frames(&mut app, &mut now, 90);
+    assert!(app.scene.render.chrome.iter().all(|c| c.opacity == 0.0));
+    let _ = update(&mut app, Message::KeyDown);
+    assert_eq!(app.scene.current, 4);
+    let _ = update(&mut app, Message::KeyUp);
+    assert_eq!(app.scene.current, 3);
+    let _ = update(&mut app, Message::KeyFlip);
+    tick_frames(&mut app, &mut now, 120);
+    assert!(app.scene.render.back.is_some());
+    let _ = update(&mut app, Message::Exit);
+    tick_frames(&mut app, &mut now, 120);
+    let _ = update(&mut app, Message::ApplyCurrent);
+    assert!(drain_calls(&app).iter().any(|(method, _)| method == "wall.apply"));
+}
+
+#[test]
+fn depth_click_applies_the_visible_card_without_waiting_for_navigation() {
+    use crate::domain::input::MouseButton;
+    for moving in [false, true] {
+        for current in [false, true] {
+            let mut app = test_app();
+            let walls: Vec<Value> = (0..12)
+                .map(|i| {
+                    let mut item = wall(&format!("d{i}"), "static", i * 10, i);
+                    item["path"] = json!(format!("/wp/d{i}.png"));
+                    item
+                })
+                .collect();
+            seed(&mut app, &walls);
+            app.config.set_key("components.wallpaperSelector.depthNavigationMs", json!(4000));
+            app.config.set_key("components.wallpaperSelector.depthSpacingPx", json!(320));
+            let _ = update(&mut app, Message::SetViewMode(String::from("depth")));
+            let mut now = Instant::now();
+            tick_frames(&mut app, &mut now, 300);
+            if moving {
+                app.scene.set_current(1, app.library_session.filtered.len());
+                tick_frames(&mut app, &mut now, 3);
+                assert!((app.scene.camera_pos() - app.scene.camera_target()).abs() > 0.1);
+            }
+            let idx = if current { app.scene.current } else { 2 };
+            let (x, y) = hit_center(&app, idx);
+            assert_eq!(
+                app.scene.render.hits.iter().find(|hit| hit.contains(x, y)).unwrap().index,
+                idx
+            );
+            let expected = app.library_session.library.catalog().items
+                [app.library_session.filtered[idx] as usize]
+                .clone();
+            drain_calls(&app);
+            let camera = app.scene.camera_pos();
+            let _ = update(&mut app, Message::Click(x, y, MouseButton::Left));
+            let calls = drain_calls(&app);
+            let applies: Vec<_> =
+                calls.iter().filter(|(method, _)| method == "wall.apply").collect();
+            assert_eq!(applies.len(), 1, "moving={moving}, current={current}");
+            assert_eq!(applies[0].1["path"], json!(expected.path));
+            assert_eq!(app.scene.current, idx);
+            assert_eq!(app.scene.camera_pos(), camera);
+        }
+    }
 }

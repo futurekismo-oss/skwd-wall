@@ -2,18 +2,93 @@ pub use crate::contracts::picker::Mode;
 
 #[derive(Debug, Clone, Copy)]
 pub struct ExtraParams {
+    pub depth: DepthParams,
+    pub collection: CollectionParams,
     pub sandy: super::sandy::SandyParams,
     pub hand: super::hand::HandParams,
 }
 
 impl ExtraParams {
     pub fn morph_toward(&mut self, target: &ExtraParams, amt: f32) {
+        self.depth.morph_toward(&target.depth, amt);
+        self.collection.morph_toward(&target.collection, amt);
         self.sandy.morph_toward(&target.sandy, amt);
         self.hand.morph_toward(&target.hand, amt);
     }
 
     pub fn settled_to(&self, target: &ExtraParams) -> bool {
-        self.sandy.settled_to(&target.sandy) && self.hand.settled_to(&target.hand)
+        self.depth.settled_to(&target.depth)
+            && self.collection.settled_to(&target.collection)
+            && self.sandy.settled_to(&target.sandy)
+            && self.hand.settled_to(&target.hand)
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct DepthParams {
+    pub selection_frame: bool,
+    pub width: f32,
+    pub spacing: f32,
+    pub falloff: f32,
+    pub navigation_ms: f32,
+}
+impl Default for DepthParams {
+    fn default() -> Self {
+        Self {
+            selection_frame: false,
+            width: 280.0,
+            spacing: 280.0,
+            falloff: 0.05,
+            navigation_ms: 1000.0,
+        }
+    }
+}
+impl DepthParams {
+    fn morph_toward(&mut self, target: &Self, amt: f32) {
+        self.selection_frame = target.selection_frame;
+        self.width = lerp(self.width, target.width, amt);
+        self.spacing = lerp(self.spacing, target.spacing, amt);
+        self.falloff = lerp(self.falloff, target.falloff, amt);
+        self.navigation_ms = lerp(self.navigation_ms, target.navigation_ms, amt);
+    }
+    fn settled_to(&self, target: &Self) -> bool {
+        self.selection_frame == target.selection_frame
+            && feq(self.width, target.width)
+            && feq(self.spacing, target.spacing)
+            && (self.falloff - target.falloff).abs() < 0.00001
+            && feq(self.navigation_ms, target.navigation_ms)
+    }
+}
+#[derive(Debug, Clone, Copy)]
+pub struct CollectionParams {
+    pub size: f32,
+    pub spacing: f32,
+    pub count: f32,
+    pub tilt: f32,
+    pub corners: f32,
+    pub speed: f32,
+}
+impl Default for CollectionParams {
+    fn default() -> Self {
+        Self { size: 42.0, spacing: 17.0, count: 7.0, tilt: 52.0, corners: 2.0, speed: 100.0 }
+    }
+}
+impl CollectionParams {
+    fn morph_toward(&mut self, target: &Self, amt: f32) {
+        self.size = lerp(self.size, target.size, amt);
+        self.spacing = lerp(self.spacing, target.spacing, amt);
+        self.count = lerp(self.count, target.count, amt);
+        self.tilt = lerp(self.tilt, target.tilt, amt);
+        self.corners = lerp(self.corners, target.corners, amt);
+        self.speed = lerp(self.speed, target.speed, amt);
+    }
+    fn settled_to(&self, target: &Self) -> bool {
+        feq(self.size, target.size)
+            && feq(self.spacing, target.spacing)
+            && feq(self.count, target.count)
+            && feq(self.tilt, target.tilt)
+            && feq(self.corners, target.corners)
+            && feq(self.speed, target.speed)
     }
 }
 
@@ -193,6 +268,7 @@ impl StageParams {
 
 #[derive(Debug, Clone, Copy)]
 pub struct HexParams {
+    pub parallax: bool,
     pub r: f32,
     pub rows: usize,
     pub cols: usize,
@@ -217,6 +293,7 @@ pub struct HexParams {
 impl Default for HexParams {
     fn default() -> Self {
         Self {
+            parallax: false,
             r: 140.0,
             rows: 3,
             cols: 7,
@@ -250,6 +327,7 @@ impl HexParams {
     }
 
     pub fn morph_toward(&mut self, target: &HexParams, amt: f32) {
+        self.parallax = target.parallax;
         self.r = lerp(self.r, target.r, amt);
         self.rows = target.rows;
         self.cols = target.cols;
@@ -272,7 +350,8 @@ impl HexParams {
     }
 
     pub fn settled_to(&self, target: &HexParams) -> bool {
-        feq(self.r, target.r)
+        self.parallax == target.parallax
+            && feq(self.r, target.r)
             && self.rows == target.rows
             && self.cols == target.cols
             && self.scroll_step == target.scroll_step
@@ -406,6 +485,8 @@ pub(crate) fn signed_hash(index: usize, salt: u32) -> f32 {
 
 #[derive(Debug, Clone, Copy)]
 pub struct SliceParams {
+    pub parallax: bool,
+    pub shadows: bool,
     pub offset_x: f32,
     pub offset_y: f32,
     pub slice_w: f32,
@@ -446,6 +527,8 @@ impl SliceParams {
     }
 
     pub fn morph_toward(&mut self, target: &SliceParams, amt: f32) {
+        self.parallax = target.parallax;
+        self.shadows = target.shadows;
         self.offset_x = lerp(self.offset_x, target.offset_x, amt);
         self.offset_y = lerp(self.offset_y, target.offset_y, amt);
         self.slice_w = lerp(self.slice_w, target.slice_w, amt);
@@ -463,7 +546,9 @@ impl SliceParams {
     }
 
     pub fn settled_to(&self, target: &SliceParams) -> bool {
-        feq(self.offset_x, target.offset_x)
+        self.parallax == target.parallax
+            && self.shadows == target.shadows
+            && feq(self.offset_x, target.offset_x)
             && feq(self.offset_y, target.offset_y)
             && feq(self.slice_w, target.slice_w)
             && feq(self.expanded_w, target.expanded_w)
@@ -627,10 +712,23 @@ pub struct Hit {
     pub hex: bool,
     pub hex_shape: HexShape,
     pub triangle_direction: u8,
+    pub quad: Option<[[f32; 2]; 4]>,
 }
 
 impl Hit {
     pub fn contains(&self, px: f32, py: f32) -> bool {
+        if let Some(quad) = self.quad {
+            let mut positive = false;
+            let mut negative = false;
+            for i in 0..4 {
+                let a = quad[i];
+                let b = quad[(i + 1) % 4];
+                let cross = (b[0] - a[0]) * (py - a[1]) - (b[1] - a[1]) * (px - a[0]);
+                positive |= cross > 0.0;
+                negative |= cross < 0.0;
+            }
+            return positive != negative;
+        }
         if self.hex {
             let qx = (px - self.cx).abs();
             let qy = (py - self.cy).abs();

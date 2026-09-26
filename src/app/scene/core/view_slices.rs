@@ -7,7 +7,9 @@ use crate::frontend::scene::{
 use crate::infrastructure::preview::is_webp;
 
 use super::atlas_helpers::{enqueue_far, enqueue_near};
-use super::layout_helpers::{CardSpec, STORM_CUTOFF, TOP_BAR, prefetch_reach};
+use super::layout_helpers::{
+    CardSpec, STORM_CUTOFF, TOP_BAR, apply_position_parallax, prefetch_reach,
+};
 use super::model::{RebuildCtx, RebuildSinks, SceneCore};
 
 impl SceneCore {
@@ -85,7 +87,19 @@ impl SceneCore {
             if opacity <= 0.01 {
                 continue;
             }
-            self.slice_card(ctx, sinks, idx, w, item_cx, item_cy, opacity, half_view, bend);
+            self.slice_card(
+                ctx,
+                sinks,
+                idx,
+                w,
+                item_cx,
+                item_cy,
+                opacity,
+                half_view,
+                bend,
+                sp,
+                sp.parallax.then_some((item_cx - cx) / (half_view * 1.2).max(1.0)),
+            );
         }
         self.push_flip_old(sinks.instances, sinks.wanted);
     }
@@ -111,7 +125,7 @@ impl SceneCore {
         });
     }
 
-    fn slice_card(
+    pub(super) fn slice_card(
         &mut self,
         ctx: &mut RebuildCtx<'_>,
         sinks: &mut RebuildSinks<'_>,
@@ -122,23 +136,26 @@ impl SceneCore {
         opacity: f32,
         half_view: f32,
         bend: f32,
+        sp: layout::SliceParams,
+        parallax: Option<f32>,
     ) {
-        let sp = self.sp;
         let cx = self.center_x() + sp.offset_x * self.viewport.0 * 0.5;
         let store_idx = ctx.filtered[idx] as usize;
         let is_current = idx == self.current;
         let is_hover = Some(idx) == self.hover;
         let roll = self.flip_roll_for(store_idx, item_cx, item_cy);
         let radii = layout::slice_clamped_corners(sp.corners, w, sp.slice_h, sp.skew, sp.edge_tilt);
-        let (sh_x, sh_y, sh_a) = if is_current { (4.0, 10.0, 0.5) } else { (2.0, 5.0, 0.3) };
-        sinks.instances.push(InstanceRaw {
-            rect: [item_cx + sh_x, item_cy + sh_y, w * 0.5, sp.slice_h * 0.5],
-            radii,
-            fill: [0.0, 0.0, 0.0, sh_a],
-            params: [sp.skew, 0.0, opacity * roll, 0.0],
-            shape: [sp.edge_tilt, 0.0, 0.0, 0.0],
-            ..Default::default()
-        });
+        if sp.shadows {
+            let (sh_x, sh_y, sh_a) = if is_current { (4.0, 10.0, 0.5) } else { (2.0, 5.0, 0.3) };
+            sinks.instances.push(InstanceRaw {
+                rect: [item_cx + sh_x, item_cy + sh_y, w * 0.5, sp.slice_h * 0.5],
+                radii,
+                fill: [0.0, 0.0, 0.0, sh_a],
+                params: [sp.skew, 0.0, opacity * roll, 0.0],
+                shape: [sp.edge_tilt, 0.0, 0.0, 0.0],
+                ..Default::default()
+            });
+        }
         let chrome_op = if self.card.flipped == Some(idx) {
             opacity * (1.0 - self.card.flip.x).clamp(0.0, 1.0)
         } else {
@@ -162,7 +179,11 @@ impl SceneCore {
                 view: 0,
                 chrome_radius: radii[0],
                 opacity,
-                chrome_opacity: chrome_op * roll,
+                chrome_opacity: if self.mode == layout::Mode::Depth && !is_current {
+                    0.0
+                } else {
+                    chrome_op * roll
+                },
                 body_inset: 0.0,
                 near_ok: true,
             },
@@ -199,14 +220,26 @@ impl SceneCore {
         } else {
             ([0.0, 0.0, 0.0, 0.6], 0.4)
         };
+        let border_sel = if self.mode == layout::Mode::Depth && !self.xp.depth.selection_frame {
+            0.0
+        } else {
+            sel
+        };
         let cur_border = [prim.r, prim.g, prim.b, 1.0];
         body.border = [
-            base_border[0] + (cur_border[0] - base_border[0]) * sel,
-            base_border[1] + (cur_border[1] - base_border[1]) * sel,
-            base_border[2] + (cur_border[2] - base_border[2]) * sel,
-            base_border[3] + (cur_border[3] - base_border[3]) * sel,
+            base_border[0] + (cur_border[0] - base_border[0]) * border_sel,
+            base_border[1] + (cur_border[1] - base_border[1]) * border_sel,
+            base_border[2] + (cur_border[2] - base_border[2]) * border_sel,
+            base_border[3] + (cur_border[3] - base_border[3]) * border_sel,
         ];
-        body.params[1] = 1.0 + 2.0 * sel;
+        body.params[1] = 1.0 + 2.0 * border_sel;
+        if self.mode == layout::Mode::Depth && !self.xp.depth.selection_frame {
+            body.border = [0.0; 4];
+            body.params[1] = 0.0;
+            if sp.skew == 0.0 && sp.edge_tilt == 0.0 && radii == [0.0; 4] {
+                body.misc[3] |= crate::rendering::scene::UNFRAMED_RECT;
+            }
+        }
         body.tint = [0.0, 0.0, 0.0, base_dim * (1.0 - sel)];
         if sp.wobble && self.card.flipped != Some(idx) {
             let pad = layout::wobble_pad(sp.wobble_strength);
@@ -216,6 +249,9 @@ impl SceneCore {
             body.misc[3] |= 32;
             body.flip[3] = bend * sp.wobble_strength;
             body.flip[1] = ((item_cx - cx) / half_view.max(1.0)).clamp(-1.0, 1.0) * 0.5;
+        }
+        if let Some(position) = parallax {
+            apply_position_parallax(&mut body, position);
         }
         self.card.filter_cache.push((body, store_idx as u32, roll));
         roll_in_cut(&mut body, roll);

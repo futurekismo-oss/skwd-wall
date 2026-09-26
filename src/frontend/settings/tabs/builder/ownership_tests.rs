@@ -131,6 +131,8 @@ fn controls_owned_once() {
 fn controls_match_schema() {
     let configs = [
         FakeSettingsSource::default(),
+        FakeSettingsSource::default().with_text(keys::selector::DISPLAY_MODE, "depth"),
+        FakeSettingsSource::default().with_text(keys::selector::DISPLAY_MODE, "collection"),
         FakeSettingsSource::default().with_text(keys::selector::DISPLAY_MODE, "hex"),
         FakeSettingsSource::default().with_text(keys::selector::DISPLAY_MODE, "grid"),
         FakeSettingsSource::default().with_text(keys::selector::DISPLAY_MODE, "sandy"),
@@ -205,6 +207,8 @@ fn controls_match_schema() {
 fn fixed_controls_in_schema() {
     let configs = [
         FakeSettingsSource::default(),
+        FakeSettingsSource::default().with_text(keys::selector::DISPLAY_MODE, "depth"),
+        FakeSettingsSource::default().with_text(keys::selector::DISPLAY_MODE, "collection"),
         FakeSettingsSource::default().with_text(keys::selector::DISPLAY_MODE, "hex"),
         FakeSettingsSource::default().with_text(keys::selector::DISPLAY_MODE, "wall"),
         FakeSettingsSource::default().with_text(keys::selector::DISPLAY_MODE, "sandy"),
@@ -237,6 +241,8 @@ fn fixed_controls_in_schema() {
 fn selectable_current_value() {
     let configs = [
         FakeSettingsSource::default(),
+        FakeSettingsSource::default().with_text(keys::selector::DISPLAY_MODE, "depth"),
+        FakeSettingsSource::default().with_text(keys::selector::DISPLAY_MODE, "collection"),
         FakeSettingsSource::default().with_text(keys::selector::DISPLAY_MODE, "hex"),
         FakeSettingsSource::default().with_text(keys::selector::DISPLAY_MODE, "grid"),
         FakeSettingsSource::default().with_text(keys::selector::DISPLAY_MODE, "sandy"),
@@ -269,6 +275,8 @@ fn selectable_current_value() {
 fn controls_emit_valid_values() {
     let configs = [
         FakeSettingsSource::default(),
+        FakeSettingsSource::default().with_text(keys::selector::DISPLAY_MODE, "depth"),
+        FakeSettingsSource::default().with_text(keys::selector::DISPLAY_MODE, "collection"),
         FakeSettingsSource::default().with_text(keys::selector::DISPLAY_MODE, "hex"),
         FakeSettingsSource::default().with_text(keys::selector::DISPLAY_MODE, "wall"),
         FakeSettingsSource::default().with_text(keys::selector::DISPLAY_MODE, "sandy"),
@@ -363,4 +371,23 @@ fn card_subtitles_authored() {
         }
     }
     assert!(subtitled * 2 >= total, "{subtitled}/{total}");
+}
+
+#[test]
+fn new_layout_controls_have_one_composed_owner() {
+    for mode in ["depth", "collection"] {
+        let cfg = FakeSettingsSource::default().with_text(keys::selector::DISPLAY_MODE, mode);
+        let expected: BTreeSet<_> = ids(collect(&cfg, tab_selector))
+            .into_iter()
+            .filter(|id| id.starts_with(&format!("path:components.wallpaperSelector.{mode}")))
+            .collect();
+        assert_eq!(expected.len(), if mode == "depth" { 10 } else { 6 });
+        let actual: Vec<_> = TABS
+            .iter()
+            .flat_map(|tab| ids(build_tab_with_outputs(tab, &cfg, &[], &[], "", &[], &[])))
+            .collect();
+        for id in expected {
+            assert_eq!(actual.iter().filter(|value| **value == id).count(), 1, "{id}");
+        }
+    }
 }

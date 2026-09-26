@@ -224,6 +224,10 @@ impl Spring {
     }
 
     pub fn tick(&mut self, dt: f32) {
+        self.tick_with_precision(dt, 0.05);
+    }
+
+    pub fn tick_with_precision(&mut self, dt: f32, precision: f32) {
         let mut remaining = dt.min(0.05);
         let hop = 1.0 / 240.0;
         while remaining > 0.0 {
@@ -232,14 +236,18 @@ impl Spring {
             self.x += self.v * step;
             remaining -= step;
         }
-        if self.settled() {
+        if self.settled_with_precision(precision) {
             self.x = self.target;
             self.v = 0.0;
         }
     }
 
     pub fn settled(&self) -> bool {
-        (self.x - self.target).abs() < 0.05 && self.v.abs() < 0.5
+        self.settled_with_precision(0.05)
+    }
+
+    pub fn settled_with_precision(&self, precision: f32) -> bool {
+        (self.x - self.target).abs() < precision && self.v.abs() < precision * 10.0
     }
 
     pub fn value(&self) -> f32 {

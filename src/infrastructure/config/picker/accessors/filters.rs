@@ -25,7 +25,7 @@ impl Config {
         let mode =
             Mode::try_from_key(&configured).unwrap_or_else(|| Mode::from_key(&self.display_mode()));
         String::from(match mode {
-            Mode::Sandy | Mode::Hand => Mode::Slices.as_key(),
+            Mode::Sandy | Mode::Hand | Mode::Depth | Mode::Collection => Mode::Slices.as_key(),
             mode => mode.as_key(),
         })
     }

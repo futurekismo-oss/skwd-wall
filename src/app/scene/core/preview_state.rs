@@ -101,7 +101,7 @@ impl SceneCore {
 
     pub(super) fn preview_hover(&self) -> Option<usize> {
         match self.mode {
-            Mode::Sandy => None,
+            Mode::Sandy | Mode::Collection => None,
             _ => self.hover,
         }
     }

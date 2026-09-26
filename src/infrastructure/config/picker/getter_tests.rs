@@ -507,6 +507,7 @@ fn selector_mode_degrades() {
         ("sandy", "sandy"),
         ("nova", "sandy"),
         ("hand", "hand"),
+        ("depth", "depth"),
     ] {
         assert_eq!(sel(json!({"displayMode": mode})).selector_mode(), expected);
     }

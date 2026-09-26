@@ -714,6 +714,8 @@ pub fn picker_layout_workbench<'a>(
         "hex" => "settings-selector-mode-hex",
         "sandy" | "nova" => "settings-selector-mode-sandy",
         "hand" => "settings-selector-mode-hand",
+        "depth" => "settings-selector-mode-depth",
+        "collection" => "settings-selector-mode-collection",
         _ => "settings-selector-mode-slices",
     });
     let page_actions = row![

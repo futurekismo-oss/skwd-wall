@@ -4,7 +4,15 @@ use super::Mode;
 
 #[test]
 fn canonical_keys_round_trip() {
-    for mode in [Mode::Slices, Mode::Grid, Mode::Hex, Mode::Sandy, Mode::Hand] {
+    for mode in [
+        Mode::Slices,
+        Mode::Depth,
+        Mode::Grid,
+        Mode::Hex,
+        Mode::Sandy,
+        Mode::Hand,
+        Mode::Collection,
+    ] {
         assert_eq!(Mode::from_key(mode.as_key()), mode);
         assert_eq!(Mode::try_from_key(mode.as_key()), Some(mode));
     }

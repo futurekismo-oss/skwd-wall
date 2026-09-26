@@ -84,6 +84,10 @@ pub(super) fn exit(app: &mut App) -> Task<Message> {
     if app.close_topmost_overlay() {
         return Task::none();
     }
+    if app.scene.close_collection() {
+        app.retick();
+        return Task::none();
+    }
     app.runtime_state.metrics.exit_summary();
     info!("close requested, rss = {}", crate::infrastructure::observability::rss_label());
     super::warm::exit_picker(app)

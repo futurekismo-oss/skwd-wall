@@ -53,6 +53,7 @@ const GHOST: u32 = 8192u;
 const BACKDROP: u32 = 16384u;
 const BACKFACE: u32 = 32768u;
 const MUTED: u32 = 65536u;
+const UNFRAMED_RECT: u32 = 131072u;
 
 @vertex
 fn vs_main(@builtin(vertex_index) vi: u32, inst: Instance) -> VsOut {
@@ -497,7 +498,11 @@ fn fs_main(in: VsOut) -> @location(0) vec4<f32> {
         d = max(d, ribbon_cut(in));
     }
     let grad = max(length(vec2(dpdx(d), dpdy(d))), 0.0001);
-    let shape_a = clamp(0.5 - d / grad, 0.0, 1.0);
+    let shape_a = select(
+        clamp(0.5 - d / grad, 0.0, 1.0),
+        step(d, 0.0),
+        (in.misc.w & UNFRAMED_RECT) != 0u,
+    );
 
     if ((in.misc.w & 32u) == 32u && in.misc.x > 0u) {
         let bend = clamp(in.flip.w, -2.7, 2.7);

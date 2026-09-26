@@ -2,7 +2,9 @@ use crate::frontend::animation::{self as anim, MotionTier};
 use crate::frontend::scene::layout::{self, HexCurve, HexShape, Hit};
 use crate::frontend::scene::{InstanceRaw, roll_in_cut};
 
-use super::layout_helpers::{CardSpec, THUMB_H, THUMB_W, TOP_BAR, color4, vis_range};
+use super::layout_helpers::{
+    CardSpec, THUMB_H, THUMB_W, TOP_BAR, apply_position_parallax, color4, vis_range,
+};
 use super::model::{RebuildCtx, RebuildSinks, SceneCore};
 
 impl SceneCore {
@@ -243,7 +245,12 @@ impl SceneCore {
         );
         hit.hex_shape = hp.shape;
         hit.triangle_direction = triangle_direction;
-        if body.misc[0] > 0 {
+        if hp.parallax {
+            let center = self.center_x();
+            let span = if col_center < center { center } else { self.viewport.0 - center };
+            let position = (col_center - center) / (span + body.rect[2]).max(1.0);
+            apply_position_parallax(&mut body, position);
+        } else if body.misc[0] > 0 {
             let (co, cs) = layout::cover_crop(
                 hp.item_half_w() * 2.6,
                 hp.item_half_h() * 2.6,

@@ -13,6 +13,19 @@ impl SceneCore {
         self.direct_thumbnails = direct;
     }
 
+    pub(super) fn camera_precision(&self) -> f32 {
+        if self.mode == Mode::Depth {
+            (0.05 / self.xp.depth.spacing.max(self.xp.depth.width).max(1.0))
+                .max(self.camera.target.abs() * f32::EPSILON)
+        } else {
+            0.05
+        }
+    }
+
+    pub(super) fn camera_settled(&self) -> bool {
+        self.camera.settled_with_precision(self.camera_precision())
+    }
+
     pub fn motion_scale(&self) -> f32 {
         self.motion.scale
     }
@@ -35,17 +48,23 @@ impl SceneCore {
         self.motion.needs_frame = true;
     }
 
-    fn retime_shared_motion(&mut self) {
+    pub(super) fn retime_shared_motion(&mut self) {
         let profile = self.motion.profile;
         let scale = self.motion.scale;
         profile.retime_spring_override(
-            &mut self.camera,
-            profile.duration_ms(if self.mode == Mode::Grid {
-                MotionTier::Slow
-            } else {
-                MotionTier::Standard
-            }) * scale,
+            &mut self.collection_open,
+            profile.duration_ms(MotionTier::Standard) * scale * 100.0
+                / self.xp_target.collection.speed,
         );
+        let navigation_ms = match self.mode {
+            Mode::Depth => self.xp_target.depth.navigation_ms,
+            Mode::Collection => {
+                profile.duration_ms(MotionTier::Standard) * 100.0 / self.xp_target.collection.speed
+            }
+            Mode::Grid => profile.duration_ms(MotionTier::Slow),
+            _ => profile.duration_ms(MotionTier::Standard),
+        };
+        profile.retime_spring_override(&mut self.camera, navigation_ms * scale);
         profile.retime_spring_override(
             &mut self.card.tag_open,
             profile.duration_ms(MotionTier::Fast) * scale,
@@ -168,7 +187,9 @@ impl SceneCore {
             "transition"
         } else if !self.motion.entrance.settled() {
             "entrance"
-        } else if !self.camera.settled() {
+        } else if !self.collection_open.settled() {
+            "collection_open"
+        } else if !self.camera_settled() {
             "camera"
         } else if self.card.widths.values().any(|spr| !spr.settled()) {
             "widths"
@@ -226,7 +247,8 @@ impl SceneCore {
         }
         if self.motion.transition.is_some()
             || (!self.motion.entrance.settled() && self.motion.launch_anim != LaunchAnim::Fade)
-            || !self.camera.settled()
+            || !self.camera_settled()
+            || !self.collection_open.settled()
             || self.card.widths.values().any(|spr| !spr.settled())
             || self.card.hex_scales.values().any(|spr| !spr.settled())
             || !self.card.selection.is_empty()
@@ -418,7 +440,7 @@ impl SceneCore {
             Mode::Slices => self.sp_target.topology_differs(&sp),
             Mode::Grid => self.gp_target.topology_differs(&gp),
             Mode::Hex => self.hp_target.topology_differs(&hp),
-            Mode::Sandy | Mode::Hand => false,
+            Mode::Sandy | Mode::Hand | Mode::Depth | Mode::Collection => false,
         };
         if animate && topology_changed {
             self.begin_transition(0, [0.5, 0.5]);
@@ -431,7 +453,12 @@ impl SceneCore {
         self.sp_target = sp;
         self.gp_target = gp;
         self.hp_target = hp;
+        let speed_changed = self.xp_target.depth.navigation_ms != xp.depth.navigation_ms
+            || self.xp_target.collection.speed != xp.collection.speed;
         self.xp_target = xp;
+        if speed_changed {
+            self.retime_shared_motion();
+        }
         if !animate {
             self.sp = sp;
             self.gp = gp;
@@ -478,20 +505,16 @@ impl SceneCore {
             return;
         }
         self.mode = mode;
-        self.motion.profile.retime_spring_override(
-            &mut self.camera,
-            self.motion.profile.duration_ms(if mode == Mode::Grid {
-                MotionTier::Slow
-            } else {
-                MotionTier::Standard
-            }) * self.motion.scale,
-        );
+        self.collection_open.snap(0.0);
+        self.collection_card = None;
+        self.retime_shared_motion();
         self.camera.set_zeta(1.0);
         self.card.widths.clear();
         self.card.hex_scales.clear();
         self.hover = None;
         self.camera.snap(0.0);
-        self.layout_camera_anchor = matches!(mode, Mode::Slices | Mode::Hex);
+        self.layout_camera_anchor =
+            matches!(mode, Mode::Slices | Mode::Depth | Mode::Hex | Mode::Collection);
         self.card.filter_cache.clear();
         self.card.filter_old.clear();
         self.card.filter_cell.clear();

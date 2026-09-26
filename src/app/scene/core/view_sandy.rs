@@ -226,6 +226,7 @@ impl SceneCore {
             hex: false,
             hex_shape: HexShape::default(),
             triangle_direction: 0,
+            quad: None,
         });
     }
 

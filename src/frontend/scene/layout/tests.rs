@@ -16,6 +16,8 @@ fn sp(slice_w: f32, spacing: f32, count: usize) -> SliceParams {
         corners: [8.0; 4],
         wobble: false,
         wobble_strength: 1.0,
+        parallax: false,
+        shadows: true,
     }
 }
 
@@ -104,6 +106,7 @@ fn hit(skew: f32, hex: bool) -> Hit {
         hex,
         hex_shape: HexShape::Hexagon,
         triangle_direction: 0,
+        quad: None,
     }
 }
 
@@ -367,4 +370,17 @@ fn contains_hex_corners() {
         assert!(rect.contains(px, py));
         assert!(!hexa.contains(px, py), "corner ({px},{py})");
     }
+}
+
+#[test]
+fn projected_hit_follows_card_edges_in_both_windings() {
+    let quad = [[-50.0, -50.0], [50.0, -50.0], [30.0, 50.0], [-30.0, 50.0]];
+    for quad in [quad, [quad[3], quad[2], quad[1], quad[0]]] {
+        let area = Hit { quad: Some(quad), ..hit(0.0, false) };
+        assert!(area.contains(0.0, 0.0));
+        assert!(area.contains(45.0, -40.0));
+        assert!(!area.contains(45.0, 40.0));
+        assert!(!area.contains(0.0, 51.0));
+    }
+    assert!(!Hit { quad: Some([[0.0; 2]; 4]), ..hit(0.0, false) }.contains(0.0, 0.0));
 }

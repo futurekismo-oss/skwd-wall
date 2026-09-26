@@ -20,8 +20,9 @@ pub(super) fn wheel(app: &mut App, amount: f32) -> Task<Message> {
     if !hand_nav_closes_flip(app) && (app.detail_open() || app.menu_capturing()) {
         return Task::none();
     }
+    app.scene.close_collection();
     match app.scene.mode {
-        Mode::Slices | Mode::Sandy | Mode::Hand => {
+        Mode::Slices | Mode::Depth | Mode::Sandy | Mode::Hand | Mode::Collection => {
             app.scene.slice_scroll(amount, app.library_session.filtered.len());
         }
         Mode::Grid => app.scene.grid_scroll(-amount),
@@ -132,7 +133,7 @@ pub(super) fn key_flip(app: &mut App) -> Task<Message> {
     }
     let idx = app.scene.current;
     match app.scene.mode {
-        Mode::Slices | Mode::Hand => app.scene.toggle_flip(idx),
+        Mode::Slices | Mode::Depth | Mode::Hand => app.scene.toggle_flip(idx),
         Mode::Sandy => {
             app.scene.sandy_settle_now();
             app.scene.toggle_flip(app.scene.current);
@@ -192,6 +193,9 @@ pub(super) fn key_up(app: &mut App) -> Task<Message> {
     if app.menu_capturing() || app.detail_open() {
         return Task::none();
     }
+    if app.scene.mode == Mode::Collection {
+        return key_prev(app);
+    }
     if app.scene.mode == Mode::Hex && app.scene.hex_row > 0 {
         app.scene.kb_nav = true;
         let col = app.scene.current / app.scene.hp.rows.max(1);
@@ -224,6 +228,9 @@ pub(super) fn key_down(app: &mut App) -> Task<Message> {
     }
     if app.menu_capturing() || app.detail_open() {
         return Task::none();
+    }
+    if app.scene.mode == Mode::Collection {
+        return key_next(app);
     }
     if app.scene.mode == Mode::Hex {
         let rows = app.scene.hp.rows.max(1);

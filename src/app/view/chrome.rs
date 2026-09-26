@@ -62,10 +62,10 @@ pub(in crate::app) fn overview_set(app: &App) -> bool {
 
 pub(super) fn card_h(app: &App, vh: f32) -> f32 {
     match app.scene.mode {
-        Mode::Slices => app.scene.sp.slice_h + 110.0,
+        Mode::Slices | Mode::Depth => app.scene.sp.slice_h + 110.0,
         Mode::Grid => app.scene.gp.total_h() + 85.0,
         Mode::Hex => app.scene.hp.content_h() + 140.0,
-        Mode::Sandy | Mode::Hand => (vh - 90.0).max(200.0),
+        Mode::Sandy | Mode::Hand | Mode::Collection => (vh - 90.0).max(200.0),
     }
 }
 

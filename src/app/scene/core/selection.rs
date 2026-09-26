@@ -22,6 +22,7 @@ impl SceneCore {
         };
         bump(&mut self.current);
         bump_opt(&mut self.hover);
+        bump_opt(&mut self.collection_card);
         bump_opt(&mut self.card.flipped);
         bump_opt(&mut self.sandy.from);
         bump_opt(&mut self.sandy.bfrom);
@@ -51,6 +52,7 @@ impl SceneCore {
         if idx == self.current {
             return;
         }
+        self.close_collection();
         self.hover = None;
         if self.card.flipped.is_some() {
             if self.mode == Mode::Hand {
@@ -63,10 +65,16 @@ impl SceneCore {
         if self.mode == Mode::Slices {
             self.slice_select(idx);
         }
-        if self.mode == Mode::Hex {
-            self.hex_row = idx % self.hp.rows.max(1);
+        if matches!(self.mode, Mode::Hex | Mode::Depth) {
+            if self.mode == Mode::Hex {
+                self.hex_row = idx % self.hp.rows.max(1);
+            }
             let old = self.current;
-            let motion_ms = self.motion_ms(MotionTier::Standard);
+            let motion_ms = if self.mode == Mode::Depth {
+                self.xp.depth.navigation_ms * self.motion.scale
+            } else {
+                self.motion_ms(MotionTier::Standard)
+            };
             let mut off = self
                 .motion
                 .profile
@@ -146,6 +154,8 @@ impl SceneCore {
     }
 
     pub fn relayout(&mut self, count: usize) {
+        self.collection_open.snap(0.0);
+        self.collection_card = None;
         self.card.widths.clear();
         self.current = self.current.min(count.saturating_sub(1));
         if self.mode == Mode::Hand {
@@ -165,7 +175,10 @@ impl SceneCore {
         }
         self.user_engaged = true;
         self.reset_to_index(idx, count);
-        self.layout_camera_anchor = matches!(self.mode, Mode::Slices | Mode::Hex | Mode::Grid);
+        self.layout_camera_anchor = matches!(
+            self.mode,
+            Mode::Slices | Mode::Depth | Mode::Hex | Mode::Grid | Mode::Collection
+        );
         if let Some(camera) = camera.filter(|value| value.is_finite()) {
             self.camera.snap(camera);
             self.layout_camera_anchor = false;
@@ -174,6 +187,8 @@ impl SceneCore {
     }
 
     pub fn reset_to_index(&mut self, idx: usize, count: usize) {
+        self.collection_open.snap(0.0);
+        self.collection_card = None;
         self.card.widths.clear();
         self.card.hex_scales.clear();
         self.card.selection.clear();
@@ -186,7 +201,8 @@ impl SceneCore {
             self.hand_reset(count);
         } else {
             self.camera.snap(self.start_camera());
-            self.layout_camera_anchor = matches!(self.mode, Mode::Slices | Mode::Hex);
+            self.layout_camera_anchor =
+                matches!(self.mode, Mode::Slices | Mode::Depth | Mode::Hex | Mode::Collection);
         }
         self.motion.needs_frame = true;
     }

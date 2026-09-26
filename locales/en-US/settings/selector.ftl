@@ -286,3 +286,60 @@ settings-selector-start-position-desc = Open at the beginning, at the last wallp
 settings-selector-start-position-beginning = Beginning
 settings-selector-start-position-applied = Last applied wallpaper
 settings-selector-start-position-browsing = Last browsing position
+
+settings-selector-mode-depth = Depth
+settings-selector-depth-card = Depth cards
+settings-selector-depth-desc = Cards shrink toward the edges. As you scroll, artwork shifts inside each card according to its position in the row.
+
+settings-selector-parallax-label = Image parallax
+settings-selector-parallax-desc = Shift artwork inside each card as it moves across the view. The image keeps moving through the visible edges.
+settings-selector-mode-collection = Collection
+settings-selector-collection-desc = Browse a tilted stack with the wheel or arrow keys. Click a card to expand it; click again or press Escape to return. Press Enter to apply. Right-click for details.
+
+settings-selector-depth-height-label = Card height
+settings-selector-depth-height-desc = Height of the centre card. Large cards shrink to fit the screen.
+
+settings-selector-depth-width-label = Card width
+settings-selector-depth-width-desc = Width of the centre card in pixels.
+
+settings-selector-depth-spacing-label = Card spacing
+settings-selector-depth-spacing-desc = Distance between card centres in pixels before depth falloff.
+
+settings-selector-depth-count-label = Visible cards
+settings-selector-depth-count-desc = Maximum number of cards around the current selection.
+
+settings-selector-depth-falloff-label = Depth falloff
+settings-selector-depth-falloff-desc = Scale reduction per card away from the centre, from 0 to 1. Zero keeps their sizes equal.
+
+settings-selector-depth-corners-label = Corner radius
+settings-selector-depth-corners-desc = Round the card corners. Zero keeps square corners.
+
+settings-selector-depth-skew-label = Card skew
+settings-selector-depth-skew-desc = Slant the card edges. Zero keeps them upright.
+
+settings-selector-depth-speed-label = Navigation duration
+settings-selector-depth-speed-desc = Time for a navigation movement in milliseconds. Lower values move faster.
+
+settings-selector-collection-size-label = Card size
+settings-selector-collection-size-desc = Card width as a percentage of screen height.
+
+settings-selector-collection-spacing-label = Stack spacing
+settings-selector-collection-spacing-desc = Vertical distance between stacked cards as a percentage of card size.
+
+settings-selector-collection-count-label = Visible cards
+settings-selector-collection-count-desc = Maximum number of cards in the stack.
+
+settings-selector-collection-tilt-label = Stack tilt
+settings-selector-collection-tilt-desc = Tilt the stack away from you. Zero shows the cards face-on.
+
+settings-selector-collection-corners-label = Corner radius
+settings-selector-collection-corners-desc = Round the card corners. Zero keeps square corners.
+
+settings-selector-collection-speed-label = Motion speed
+settings-selector-collection-speed-desc = Speed of navigation and opening or closing a card. Higher values move faster.
+
+settings-selector-depth-frame-label = Selection frame
+settings-selector-depth-frame-desc = Draw a highlighted border around the selected card.
+
+settings-selector-shadows-label = Card shadows
+settings-selector-shadows-desc = Draw a shadow behind each card.

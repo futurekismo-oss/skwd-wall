@@ -12,6 +12,7 @@ impl Config {
         match self.selector_mode().as_str() {
             "grid" => super::preset_grid::snapshot(self, &mut map),
             "hex" => {
+                map.insert("hexParallax".into(), Value::from(self.hex_parallax()));
                 map.insert("hexRadius".into(), Value::from(self.hex_radius() as f64));
                 map.insert("hexRows".into(), Value::from(self.hex_rows() as u64));
                 map.insert("hexCols".into(), Value::from(self.hex_cols() as u64));
@@ -47,6 +48,36 @@ impl Config {
             }
             "sandy" => self.snapshot_sandy(&mut map),
             "hand" => self.snapshot_hand(&mut map),
+            "depth" => {
+                map.insert("depthShadows".into(), Value::from(self.depth_shadows()));
+                map.insert("depthSelectionFrame".into(), Value::from(self.depth_selection_frame()));
+                map.insert("depthHeight".into(), Value::from(self.depth_height() as f64));
+                map.insert("depthWidthPx".into(), Value::from(self.depth_width() as f64));
+                map.insert("depthSpacingPx".into(), Value::from(self.depth_spacing() as f64));
+                map.insert("depthCount".into(), Value::from(self.depth_count() as f64));
+                map.insert("depthFalloffFactor".into(), Value::from(self.depth_falloff() as f64));
+                map.insert("depthCorners".into(), Value::from(self.depth_corners() as f64));
+                map.insert("depthSkew".into(), Value::from(self.depth_skew() as f64));
+                map.insert(
+                    "depthNavigationMs".into(),
+                    Value::from(self.depth_navigation_ms() as f64),
+                );
+            }
+            "collection" => {
+                map.insert("collectionSize".into(), Value::from(self.collection_size() as f64));
+                map.insert(
+                    "collectionSpacing".into(),
+                    Value::from(self.collection_spacing() as f64),
+                );
+                map.insert("collectionCount".into(), Value::from(self.collection_count() as f64));
+                map.insert("collectionTilt".into(), Value::from(self.collection_tilt() as f64));
+                map.insert(
+                    "collectionCorners".into(),
+                    Value::from(self.collection_corners() as f64),
+                );
+                map.insert("collectionSpeed".into(), Value::from(self.collection_speed() as f64));
+            }
+
             _ => self.snapshot_slices(&mut map),
         }
         Value::Object(map)
@@ -128,6 +159,8 @@ impl Config {
     }
 
     fn snapshot_slices(&self, map: &mut serde_json::Map<String, Value>) {
+        map.insert("sliceShadows".into(), Value::from(self.slice_shadows()));
+        map.insert("sliceParallax".into(), Value::from(self.slice_parallax()));
         let (x, y) = self.slice_position();
         map.insert("sliceStageX".into(), Value::from(percent(x)));
         map.insert("sliceStageY".into(), Value::from(percent(y)));

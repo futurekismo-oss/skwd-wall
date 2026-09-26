@@ -46,7 +46,7 @@ pub(super) fn mouse_moved(app: &mut App, x: f32, y: f32) -> Task<Message> {
             app.scene.hover = hit;
             app.scene.hand_pointer(x, y, hit);
         }
-        Mode::Grid => app.scene.hover = hit,
+        Mode::Depth | Mode::Grid | Mode::Collection => app.scene.hover = hit,
     }
     if changed {
         app.scene.touch();
@@ -198,6 +198,11 @@ fn remove_back_panel_tag(app: &mut App, fi: usize, x: f32, y: f32) -> bool {
 
 fn select_click(app: &mut App, idx: usize) -> Task<Message> {
     match app.scene.mode {
+        Mode::Collection => {
+            app.scene.select_collection(idx, app.library_session.filtered.len());
+            app.retick();
+            Task::none()
+        }
         Mode::Sandy => {
             if idx != app.scene.current {
                 app.scene.set_current(idx, app.library_session.filtered.len());
@@ -218,7 +223,7 @@ fn select_click(app: &mut App, idx: usize) -> Task<Message> {
 
 fn flip_click(app: &mut App, idx: usize, rect: [f32; 4]) -> Task<Message> {
     match app.scene.mode {
-        Mode::Slices | Mode::Hand => {
+        Mode::Slices | Mode::Depth | Mode::Hand => {
             if idx == app.scene.current {
                 app.scene.toggle_flip(idx);
             } else {
@@ -280,7 +285,7 @@ fn back_panel_click(app: &mut App, fi: usize, x: f32, y: f32) -> Task<Message> {
     } else if within(lay.delete) {
         delete_wallpaper(app, si);
         app.retick();
-    } else if app.scene.mode != Mode::Slices {
+    } else if !matches!(app.scene.mode, Mode::Slices | Mode::Depth) {
         return close_flip_or_apply(app, fi, &bp, x, y);
     }
     Task::none()

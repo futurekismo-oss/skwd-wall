@@ -44,24 +44,27 @@ pub(super) fn tab_selector(builder: &mut Builder<'_>) {
         &motion_speed_options(),
         filter_speed,
     );
-    builder.card(tr("settings-selector-presets-card"), tr("settings-selector-presets-card-desc"));
-    let pmode = cfg.selector_mode();
-    let selected = cfg.selected_preset(&pmode);
-    builder.text_field(
-        tr("settings-selector-preset-name-label"),
-        tr("settings-selector-preset-name-desc"),
-        PRESET_NAME_KEY,
-        tr("settings-selector-preset-name-placeholder"),
-    );
-    let items: Vec<(String, bool)> = cfg
-        .selector_preset_names(&pmode)
-        .into_iter()
-        .map(|name| {
-            let active = selected.as_deref() == Some(name.as_str());
-            (name, active)
-        })
-        .collect();
-    builder.row("", "", Control::Presets { mode: pmode, items });
+    {
+        builder
+            .card(tr("settings-selector-presets-card"), tr("settings-selector-presets-card-desc"));
+        let pmode = cfg.selector_mode();
+        let selected = cfg.selected_preset(&pmode);
+        builder.text_field(
+            tr("settings-selector-preset-name-label"),
+            tr("settings-selector-preset-name-desc"),
+            PRESET_NAME_KEY,
+            tr("settings-selector-preset-name-placeholder"),
+        );
+        let items: Vec<(String, bool)> = cfg
+            .selector_preset_names(&pmode)
+            .into_iter()
+            .map(|name| {
+                let active = selected.as_deref() == Some(name.as_str());
+                (name, active)
+            })
+            .collect();
+        builder.row("", "", Control::Presets { mode: pmode, items });
+    }
     builder.card(tr("settings-selector-live-preview-card"), "");
     builder.toggle(
         tr("settings-selector-live-preview-label"),
@@ -74,10 +77,118 @@ pub(super) fn tab_selector(builder: &mut Builder<'_>) {
         keys::selector::SHOW_TYPE_BADGES,
     );
     match mode.as_str() {
+        "depth" => {
+            builder.card(tr("settings-selector-depth-card"), tr("settings-selector-depth-desc"));
+            builder.num(
+                tr("settings-selector-depth-height-label"),
+                tr("settings-selector-depth-height-desc"),
+                keys::selector::DEPTH_HEIGHT,
+                "px",
+            );
+            builder.num(
+                tr("settings-selector-depth-width-label"),
+                tr("settings-selector-depth-width-desc"),
+                keys::selector::DEPTH_WIDTH_PX,
+                "px",
+            );
+            builder.num(
+                tr("settings-selector-depth-spacing-label"),
+                tr("settings-selector-depth-spacing-desc"),
+                keys::selector::DEPTH_SPACING_PX,
+                "px",
+            );
+            builder.num(
+                tr("settings-selector-depth-count-label"),
+                tr("settings-selector-depth-count-desc"),
+                keys::selector::DEPTH_COUNT,
+                "",
+            );
+            builder.num(
+                tr("settings-selector-depth-falloff-label"),
+                tr("settings-selector-depth-falloff-desc"),
+                keys::selector::DEPTH_FALLOFF_FACTOR,
+                "",
+            );
+            builder.num(
+                tr("settings-selector-depth-corners-label"),
+                tr("settings-selector-depth-corners-desc"),
+                keys::selector::DEPTH_CORNERS,
+                "px",
+            );
+            builder.num(
+                tr("settings-selector-depth-skew-label"),
+                tr("settings-selector-depth-skew-desc"),
+                keys::selector::DEPTH_SKEW,
+                "px",
+            );
+            builder.num(
+                tr("settings-selector-depth-speed-label"),
+                tr("settings-selector-depth-speed-desc"),
+                keys::selector::DEPTH_NAVIGATION_MS,
+                "ms",
+            );
+            builder.toggle(
+                tr("settings-selector-depth-frame-label"),
+                tr("settings-selector-depth-frame-desc"),
+                keys::selector::DEPTH_SELECTION_FRAME,
+            );
+            builder.toggle(
+                tr("settings-selector-shadows-label"),
+                tr("settings-selector-shadows-desc"),
+                keys::selector::DEPTH_SHADOWS,
+            );
+        }
+        "collection" => {
+            builder.card(
+                tr("settings-selector-mode-collection"),
+                tr("settings-selector-collection-desc"),
+            );
+            builder.num(
+                tr("settings-selector-collection-size-label"),
+                tr("settings-selector-collection-size-desc"),
+                keys::selector::COLLECTION_SIZE,
+                "%",
+            );
+            builder.num(
+                tr("settings-selector-collection-spacing-label"),
+                tr("settings-selector-collection-spacing-desc"),
+                keys::selector::COLLECTION_SPACING,
+                "%",
+            );
+            builder.num(
+                tr("settings-selector-collection-count-label"),
+                tr("settings-selector-collection-count-desc"),
+                keys::selector::COLLECTION_COUNT,
+                "",
+            );
+            builder.num(
+                tr("settings-selector-collection-tilt-label"),
+                tr("settings-selector-collection-tilt-desc"),
+                keys::selector::COLLECTION_TILT,
+                "°",
+            );
+            builder.num(
+                tr("settings-selector-collection-corners-label"),
+                tr("settings-selector-collection-corners-desc"),
+                keys::selector::COLLECTION_CORNERS,
+                "px",
+            );
+            builder.num(
+                tr("settings-selector-collection-speed-label"),
+                tr("settings-selector-collection-speed-desc"),
+                keys::selector::COLLECTION_SPEED,
+                "%",
+            );
+        }
         "hex" => {
             builder.card(
                 tr("settings-selector-composition-card"),
                 tr("settings-selector-composition-card-desc-hex"),
+            );
+            builder.toggle(
+                tr("settings-selector-parallax-label"),
+                tr("settings-selector-parallax-desc"),
+                keys::selector::HEX_PARALLAX,
             );
             builder.chips(
                 tr("settings-selector-hex-curve-label"),
@@ -646,6 +757,16 @@ pub(super) fn tab_selector(builder: &mut Builder<'_>) {
                 "px",
             );
             builder.toggle(
+                tr("settings-selector-parallax-label"),
+                tr("settings-selector-parallax-desc"),
+                keys::selector::SLICE_PARALLAX,
+            );
+            builder.toggle(
+                tr("settings-selector-shadows-label"),
+                tr("settings-selector-shadows-desc"),
+                keys::selector::SLICE_SHADOWS,
+            );
+            builder.toggle(
                 tr("settings-selector-wobble-label"),
                 tr("settings-selector-wobble-desc"),
                 keys::selector::SLICE_WOBBLE,
@@ -771,6 +892,8 @@ fn mode_label_key(mode: &str) -> &'static str {
         "wall" => "settings-selector-mode-wall",
         "sandy" => "settings-selector-mode-sandy",
         "hand" => "settings-selector-mode-hand",
+        "depth" => "settings-selector-mode-depth",
+        "collection" => "settings-selector-mode-collection",
         _ => "settings-selector-mode-slices",
     }
 }

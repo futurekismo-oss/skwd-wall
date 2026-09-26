@@ -46,7 +46,7 @@ fn browsing_app(mode: &str) -> App {
 
 #[test]
 fn browsing_without_applying_survives_close_in_every_mode() {
-    for mode in ["slices", "hex", "wall", "sandy", "hand"] {
+    for mode in ["slices", "depth", "hex", "wall", "sandy", "hand", "collection"] {
         let mut app = browsing_app(mode);
         app.scene.set_current(75, 100);
         let mut now = Instant::now();

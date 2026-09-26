@@ -1,20 +1,24 @@
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Mode {
     Slices,
+    Depth,
     Grid,
     Hex,
     Sandy,
     Hand,
+    Collection,
 }
 
 impl Mode {
     pub fn try_from_key(value: &str) -> Option<Self> {
         match value {
             "slices" => Some(Self::Slices),
+            "depth" => Some(Self::Depth),
             "wall" | "grid" => Some(Self::Grid),
             "hex" => Some(Self::Hex),
             "sandy" | "nova" => Some(Self::Sandy),
             "hand" => Some(Self::Hand),
+            "collection" => Some(Self::Collection),
             _ => None,
         }
     }
@@ -26,10 +30,12 @@ impl Mode {
     pub const fn as_key(self) -> &'static str {
         match self {
             Self::Slices => "slices",
+            Self::Depth => "depth",
             Self::Grid => "wall",
             Self::Hex => "hex",
             Self::Sandy => "sandy",
             Self::Hand => "hand",
+            Self::Collection => "collection",
         }
     }
 }

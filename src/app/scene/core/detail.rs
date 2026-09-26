@@ -93,7 +93,7 @@ impl SceneCore {
             if self.mode == Mode::Hand {
                 self.hand_flip_begin(true);
             }
-            if matches!(self.mode, Mode::Slices | Mode::Sandy | Mode::Hand)
+            if matches!(self.mode, Mode::Slices | Mode::Depth | Mode::Sandy | Mode::Hand)
                 && !self.card.flip_shader_enabled
                 && !self.card.flip_back_enabled
             {
@@ -166,8 +166,11 @@ impl SceneCore {
             edge_tilt,
             radii,
             progress,
-            coordinated_flip: matches!(self.mode, Mode::Slices | Mode::Sandy | Mode::Hand),
-            embedded: matches!(self.mode, Mode::Slices | Mode::Hand),
+            coordinated_flip: matches!(
+                self.mode,
+                Mode::Slices | Mode::Depth | Mode::Sandy | Mode::Hand
+            ),
+            embedded: matches!(self.mode, Mode::Slices | Mode::Depth | Mode::Hand),
             animate_flip_shader: self.card.flip_shader_enabled,
             animate_flip_back: self.card.flip_back_enabled,
             title: back_title(item),
@@ -219,7 +222,7 @@ impl SceneCore {
         instances: &mut Vec<InstanceRaw>,
         wanted: &mut HashSet<usize>,
     ) {
-        if self.mode == Mode::Slices {
+        if matches!(self.mode, Mode::Slices | Mode::Depth) {
             return;
         }
         let Some(fi) = self.card.flipped else { return };

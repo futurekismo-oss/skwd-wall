@@ -47,6 +47,8 @@ impl Config {
         main_monitor: str(skwd_config::keys::system::MONITOR, "");
         sandy_swap_loop: off_unless_on(skwd_config::keys::selector::SANDY_SWAP_LOOP);
         sandy_video_out_live: on_unless_off(skwd_config::keys::selector::SANDY_OUTGOING_LIVE);
+        slice_parallax: off_unless_on(skwd_config::keys::selector::SLICE_PARALLAX);
+        hex_parallax: off_unless_on(skwd_config::keys::selector::HEX_PARALLAX);
         slice_wobble: off_unless_on(skwd_config::keys::selector::SLICE_WOBBLE);
         weather_match: off_unless_on(skwd_config::keys::general::WEATHER_MATCH);
     }
@@ -469,6 +471,7 @@ impl Config {
 }
 
 fn canonicalize_picker_config(data: &mut Value) {
+    skwd_config::canonicalize_depth_layout(data);
     skwd_config::canonicalize_paper_engine(data);
     skwd_config::canonicalize_we_renderer(data);
     canonicalize_resolution_presets(data);
