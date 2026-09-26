@@ -67,7 +67,7 @@ class PrivateSourcePolicyTests(unittest.TestCase):
             self.assertNotIn(f"repository: liixini/skwd-{name.replace('_', '-')}", workflow)
         self.assertNotIn("GIT_CONFIG_COUNT", workflow)
         self.assertNotIn("insteadOf", workflow)
-        verify_revision = "a6478a04192f4720790c17fbede941cf08be9d60"
+        verify_revision = "657e47bdeff7b551aa7dd49f739cb3e74e3af76a"
         self.assertIn("repository: liixini/skwd-verify", workflow)
         self.assertIn(f"ref: {verify_revision}", workflow)
         verifier_step = workflow.split("      - name: Verify system-test repository\n", 1)[1]
