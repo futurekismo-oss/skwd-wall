@@ -89,3 +89,42 @@ fn refresh_uses_the_managed_reload_without_toggling_the_app_off() {
     assert!(app.daemon.app_themes.as_ref().unwrap().apps[0].enabled);
     assert_eq!(app.daemon.app_themes.as_ref().unwrap().apps[0].state, "busy");
 }
+
+#[test]
+fn changed_themes_offer_explicit_recovery_without_using_the_restore_switch() {
+    let mut app = test_app();
+    let mut result = status();
+    result["apps"][0]["enabled"] = json!(true);
+    result["apps"][0]["state"] = json!("changed");
+    result["apps"][0]["can_enable"] = json!(false);
+    result["apps"][0]["can_disable"] = json!(false);
+    result["apps"][0]["can_disconnect"] = json!(true);
+    result["apps"][0]["can_reconnect"] = json!(true);
+    result["apps"][0]["template_path"] = json!("/config/skwd-wall-v2/app-themes/kitty.template");
+    app.on_result(Pending::AppThemes, &result);
+    let _ = drain_calls(&app);
+    let _ = update(
+        &mut app,
+        Message::Settings(SettingsMsg::Run(ActionId::CustomizeAppTheme(0, "disconnect"))),
+    );
+    let calls = drain_calls(&app);
+    assert!(calls.iter().any(|(method, params)| method == "theme.app.customize"
+        && params == &json!({"id":"kitty", "action":"disconnect"})));
+    assert!(!calls.iter().any(|(method, _)| method == "theme.app.set"));
+    result["apps"][0]["state"] = json!("disconnected");
+    result["apps"][0]["enabled"] = json!(false);
+    result["apps"][0]["can_disconnect"] = json!(false);
+    app.daemon.pending.clear();
+    app.on_result(Pending::AppThemeSet, &result);
+    let _ = drain_calls(&app);
+    let _ = update(
+        &mut app,
+        Message::Settings(SettingsMsg::Run(ActionId::CustomizeAppTheme(0, "reconnect"))),
+    );
+    assert!(
+        drain_calls(&app)
+            .iter()
+            .any(|(method, params)| method == "theme.app.customize"
+                && params["action"] == "reconnect")
+    );
+}

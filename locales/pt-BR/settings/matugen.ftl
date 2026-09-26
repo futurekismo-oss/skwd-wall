@@ -65,3 +65,16 @@ settings-app-themes-retry-reload = Abra o aplicativo e escolha Atualizar cores p
 
 settings-matugen-enabled-notice = As cores do papel de parede agora usam Matugen.
 settings-matugen-disabled-notice = As cores do papel de parede agora usam o Iris integrado.
+
+settings-app-themes-disconnected = Disconnected - keeping current colours
+settings-app-themes-template-desc = Edit this template to choose which palette colours each field uses. Save the file, then refresh colours. Wallpaper changes keep your mappings.
+settings-app-themes-create-template = Create editable template
+settings-app-themes-copy-template = Copy template path
+settings-app-themes-reset-template = Reset mappings to defaults
+settings-app-themes-disconnect = Disconnect and keep current colours
+settings-app-themes-disconnect-desc = Stop updating this app. Keep its current files and colours, including your edits.
+settings-app-themes-reconnect = Back up edits and reconnect
+settings-app-themes-reconnect-desc = Save a backup of the current files, then apply your mappings and resume colour updates. Direct edits to generated colours are replaced.
+
+settings-app-themes-custom-output-status = Uma saída personalizada do Skwd define as cores deste aplicativo
+settings-app-themes-custom-switch = Escolha o tema gerenciado abaixo para mudar ou mantenha esta opção como está para continuar usando sua saída personalizada.

@@ -67,3 +67,16 @@ settings-app-themes-retry-reload = Öppna appen och välj sedan Uppdatera färge
 
 settings-matugen-enabled-notice = Bytte bakgrundens färgkälla till Matugen.
 settings-matugen-disabled-notice = Bytte bakgrundens färgkälla till inbyggda Iris.
+
+settings-app-themes-disconnected = Disconnected - keeping current colours
+settings-app-themes-template-desc = Edit this template to choose which palette colours each field uses. Save the file, then refresh colours. Wallpaper changes keep your mappings.
+settings-app-themes-create-template = Create editable template
+settings-app-themes-copy-template = Copy template path
+settings-app-themes-reset-template = Reset mappings to defaults
+settings-app-themes-disconnect = Disconnect and keep current colours
+settings-app-themes-disconnect-desc = Stop updating this app. Keep its current files and colours, including your edits.
+settings-app-themes-reconnect = Back up edits and reconnect
+settings-app-themes-reconnect-desc = Save a backup of the current files, then apply your mappings and resume colour updates. Direct edits to generated colours are replaced.
+
+settings-app-themes-custom-output-status = Befintliga egna utdata från Skwd färgsätter appen
+settings-app-themes-custom-switch = Välj Använd hanterat tema nedan för att byta, eller låt inställningen vara för att fortsätta använda dina egna utdata.

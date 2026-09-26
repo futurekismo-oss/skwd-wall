@@ -67,3 +67,16 @@ settings-app-themes-retry-reload = ऐप खोलें, फिर दोब�
 
 settings-matugen-enabled-notice = वॉलपेपर के रंगों के लिए Matugen चुना गया।
 settings-matugen-disabled-notice = वॉलपेपर के रंगों के लिए अंतर्निहित Iris चुना गया।
+
+settings-app-themes-disconnected = Disconnected - keeping current colours
+settings-app-themes-template-desc = Edit this template to choose which palette colours each field uses. Save the file, then refresh colours. Wallpaper changes keep your mappings.
+settings-app-themes-create-template = Create editable template
+settings-app-themes-copy-template = Copy template path
+settings-app-themes-reset-template = Reset mappings to defaults
+settings-app-themes-disconnect = Disconnect and keep current colours
+settings-app-themes-disconnect-desc = Stop updating this app. Keep its current files and colours, including your edits.
+settings-app-themes-reconnect = Back up edits and reconnect
+settings-app-themes-reconnect-desc = Save a backup of the current files, then apply your mappings and resume colour updates. Direct edits to generated colours are replaced.
+
+settings-app-themes-custom-output-status = मौजूदा Skwd कस्टम आउटपुट इस ऐप के रंग तय करता है
+settings-app-themes-custom-switch = बदलने के लिए नीचे प्रबंधित थीम चुनें, या अपने कस्टम आउटपुट का उपयोग जारी रखने के लिए इसे जैसा है वैसा छोड़ दें।

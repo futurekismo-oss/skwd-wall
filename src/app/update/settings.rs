@@ -1319,6 +1319,44 @@ pub(super) fn settings_run(app: &mut App, id: ActionId) -> Task<Message> {
             app.init_settings_inputs();
             app.daemon.client.call("wall.retheme", json!({}));
         }
+        ActionId::CopyAppThemeTemplate(index) => {
+            if let Some(entry) =
+                app.daemon.app_themes.as_ref().and_then(|result| result.apps.get(index as usize))
+            {
+                return iced::clipboard::write(entry.template_path.clone());
+            }
+        }
+        ActionId::CustomizeAppTheme(index, action) => {
+            if app.daemon.pending.values().any(|pending| matches!(pending, Pending::AppThemeSet)) {
+                return Task::none();
+            }
+            let Some(entry) = app
+                .daemon
+                .app_themes
+                .as_mut()
+                .and_then(|result| result.apps.get_mut(index as usize))
+            else {
+                return Task::none();
+            };
+            let allowed = match action {
+                "disconnect" => entry.can_disconnect,
+                "reconnect" => entry.can_reconnect,
+                "create-template" | "reset-template" => !entry.template_path.is_empty(),
+                _ => false,
+            };
+            if !allowed {
+                return Task::none();
+            }
+            let id = entry.id.clone();
+            entry.state = "busy".into();
+            entry.can_enable = false;
+            entry.can_disable = false;
+            app.call_tracked(
+                "theme.app.customize",
+                json!({"id": id, "action": action}),
+                Pending::AppThemeSet,
+            );
+        }
         ActionId::RefreshAppThemes => {
             if app.daemon.pending.values().any(|pending| matches!(pending, Pending::AppThemeSet)) {
                 return Task::none();

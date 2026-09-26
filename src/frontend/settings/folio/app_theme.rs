@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use iced::widget::{column, container, text};
 use iced::{Alignment, Element, Length, Padding};
 
@@ -9,8 +12,12 @@ use crate::frontend::theme::Palette;
 use crate::frontend::ui::{TYPE_SMALL, folio_action, label, row};
 use crate::i18n::tr;
 
-fn state_label(state: &str) -> &'static str {
+fn state_label(state: &str, detail: &str) -> &'static str {
+    if state == "conflict" && detail == "custom-output" {
+        return tr("settings-app-themes-custom-output-status");
+    }
     tr(match state {
+        "disconnected" => "settings-app-themes-disconnected",
         "applied" => "settings-app-themes-applied",
         "ready" => "settings-app-themes-ready",
         "not-installed" => "settings-app-themes-not-installed",
@@ -40,7 +47,7 @@ pub(super) fn view(
         index as u8,
         !app.enabled && !app.can_disable,
     ))));
-    let status = state_label(&app.state);
+    let status = state_label(&app.state, &app.detail);
     let installed = tr(if app.installed {
         "settings-app-themes-installed"
     } else {
@@ -116,9 +123,11 @@ pub(super) fn view(
     let mut body = column![header, status_row].spacing(16.0 * scale);
     if expanded {
         let help = match app.state.as_str() {
-            "conflict" if app.detail == "custom-output" => {
-                tr("settings-app-themes-custom-conflict")
-            }
+            "conflict" if app.detail == "custom-output" => tr(if app.can_adopt {
+                "settings-app-themes-custom-switch"
+            } else {
+                "settings-app-themes-custom-conflict"
+            }),
             "conflict" => tr("settings-app-themes-other-owner"),
             "reload-needed" => tr("settings-app-themes-retry-reload"),
             _ => tr("settings-app-themes-restore-desc"),
@@ -135,6 +144,87 @@ pub(super) fn view(
                 ]
                 .spacing(3.0 * scale),
             );
+        }
+        if !app.template_path.is_empty() {
+            body = body.push(label(
+                tr("settings-app-themes-template-desc"),
+                TYPE_SMALL,
+                scale,
+                palette.surface_text,
+            ));
+            body = body.push(label(app.template_path.clone(), TYPE_SMALL, scale, palette.primary));
+            let template_action = if app.customized {
+                ActionId::CopyAppThemeTemplate(index as u8)
+            } else {
+                ActionId::CustomizeAppTheme(index as u8, "create-template")
+            };
+            body = body.push(folio_action(
+                tr(if app.customized {
+                    "settings-app-themes-copy-template"
+                } else {
+                    "settings-app-themes-create-template"
+                }),
+                false,
+                (app.state != "busy")
+                    .then_some(Message::Settings(SettingsMsg::Run(template_action))),
+                Length::Fill,
+                scale * 0.85,
+                palette,
+            ));
+            if app.customized {
+                body = body.push(folio_action(
+                    tr("settings-app-themes-reset-template"),
+                    false,
+                    (app.state != "busy").then_some(Message::Settings(SettingsMsg::Run(
+                        ActionId::CustomizeAppTheme(index as u8, "reset-template"),
+                    ))),
+                    Length::Fill,
+                    scale * 0.85,
+                    palette,
+                ));
+            }
+        }
+        if app.can_disconnect {
+            body = body.push(label(
+                tr("settings-app-themes-disconnect-desc"),
+                TYPE_SMALL,
+                scale,
+                palette.surface_text,
+            ));
+            body = body.push(folio_action(
+                tr("settings-app-themes-disconnect"),
+                false,
+                (app.state != "busy").then_some(Message::Settings(SettingsMsg::Run(
+                    ActionId::CustomizeAppTheme(index as u8, "disconnect"),
+                ))),
+                Length::Fill,
+                scale * 0.85,
+                palette,
+            ));
+        }
+        if app.can_reconnect
+            && matches!(
+                app.state.as_str(),
+                "changed" | "interrupted" | "needs-review" | "disconnected"
+            )
+        {
+            body = body.push(label(
+                tr("settings-app-themes-reconnect-desc"),
+                TYPE_SMALL,
+                scale,
+                palette.surface_text,
+            ));
+            body = body.push(folio_action(
+                tr("settings-app-themes-reconnect"),
+                false,
+                Some(Message::Settings(SettingsMsg::Run(ActionId::CustomizeAppTheme(
+                    index as u8,
+                    "reconnect",
+                )))),
+                Length::Fill,
+                scale * 0.85,
+                palette,
+            ));
         }
         if app.can_adopt {
             body = body.push(label(

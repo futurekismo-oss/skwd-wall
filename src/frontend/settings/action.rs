@@ -5,6 +5,8 @@ pub enum ActionId {
     SetAppTheme(u8, bool),
     AdoptAppTheme(u8),
     RefreshAppTheme(u8),
+    CustomizeAppTheme(u8, &'static str),
+    CopyAppThemeTemplate(u8),
     ClearCache,
     CaptureWeThumbnails,
     RecomputeColors,

@@ -65,3 +65,16 @@ settings-app-themes-retry-reload = アプリを開いてから「色を更新」
 
 settings-matugen-enabled-notice = 壁紙の配色を Matugen に切り替えました。
 settings-matugen-disabled-notice = 壁紙の配色を内蔵 Iris に切り替えました。
+
+settings-app-themes-disconnected = Disconnected - keeping current colours
+settings-app-themes-template-desc = Edit this template to choose which palette colours each field uses. Save the file, then refresh colours. Wallpaper changes keep your mappings.
+settings-app-themes-create-template = Create editable template
+settings-app-themes-copy-template = Copy template path
+settings-app-themes-reset-template = Reset mappings to defaults
+settings-app-themes-disconnect = Disconnect and keep current colours
+settings-app-themes-disconnect-desc = Stop updating this app. Keep its current files and colours, including your edits.
+settings-app-themes-reconnect = Back up edits and reconnect
+settings-app-themes-reconnect-desc = Save a backup of the current files, then apply your mappings and resume colour updates. Direct edits to generated colours are replaced.
+
+settings-app-themes-custom-output-status = 既存のSkwdカスタム出力がこのアプリの配色を設定しています
+settings-app-themes-custom-switch = 切り替えるには下の管理テーマを選択してください。カスタム出力を使い続ける場合は、この設定をそのままにしてください。

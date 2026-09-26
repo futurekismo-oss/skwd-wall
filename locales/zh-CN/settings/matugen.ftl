@@ -65,3 +65,16 @@ settings-app-themes-retry-reload = 打开应用，然后选择“刷新颜色”
 
 settings-matugen-enabled-notice = 壁纸配色已切换到 Matugen。
 settings-matugen-disabled-notice = 壁纸配色已切换到内置 Iris。
+
+settings-app-themes-disconnected = Disconnected - keeping current colours
+settings-app-themes-template-desc = Edit this template to choose which palette colours each field uses. Save the file, then refresh colours. Wallpaper changes keep your mappings.
+settings-app-themes-create-template = Create editable template
+settings-app-themes-copy-template = Copy template path
+settings-app-themes-reset-template = Reset mappings to defaults
+settings-app-themes-disconnect = Disconnect and keep current colours
+settings-app-themes-disconnect-desc = Stop updating this app. Keep its current files and colours, including your edits.
+settings-app-themes-reconnect = Back up edits and reconnect
+settings-app-themes-reconnect-desc = Save a backup of the current files, then apply your mappings and resume colour updates. Direct edits to generated colours are replaced.
+
+settings-app-themes-custom-output-status = 现有的 Skwd 自定义输出为此应用设置配色
+settings-app-themes-custom-switch = 选择下方的托管主题以切换，或保持现状以继续使用自定义输出。

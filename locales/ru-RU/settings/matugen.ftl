@@ -65,3 +65,16 @@ settings-app-themes-retry-reload = Откройте приложение и вы
 
 settings-matugen-enabled-notice = Цвета обоев переключены на Matugen.
 settings-matugen-disabled-notice = Цвета обоев переключены на встроенный Iris.
+
+settings-app-themes-disconnected = Disconnected - keeping current colours
+settings-app-themes-template-desc = Edit this template to choose which palette colours each field uses. Save the file, then refresh colours. Wallpaper changes keep your mappings.
+settings-app-themes-create-template = Create editable template
+settings-app-themes-copy-template = Copy template path
+settings-app-themes-reset-template = Reset mappings to defaults
+settings-app-themes-disconnect = Disconnect and keep current colours
+settings-app-themes-disconnect-desc = Stop updating this app. Keep its current files and colours, including your edits.
+settings-app-themes-reconnect = Back up edits and reconnect
+settings-app-themes-reconnect-desc = Save a backup of the current files, then apply your mappings and resume colour updates. Direct edits to generated colours are replaced.
+
+settings-app-themes-custom-output-status = Пользовательский вывод Skwd задаёт цвета этого приложения
+settings-app-themes-custom-switch = Выберите управляемую тему ниже, чтобы переключиться, или оставьте всё как есть, чтобы продолжить использовать пользовательский вывод.
