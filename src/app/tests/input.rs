@@ -1248,6 +1248,89 @@ fn collection_click_previews_escape_returns_and_enter_applies() {
 }
 
 #[test]
+fn collection_click_after_escape_or_on_another_card_only_previews() {
+    use crate::domain::input::MouseButton;
+    let mut app = test_app();
+    let walls: Vec<Value> = (0..8).map(|i| wall(&format!("c{i}"), "static", i * 10, i)).collect();
+    seed(&mut app, &walls);
+    let _ = update(&mut app, Message::SetViewMode(String::from("collection")));
+    let mut now = Instant::now();
+    for dismiss in [false, true] {
+        app.scene.close_collection();
+        tick_frames(&mut app, &mut now, 120);
+        app.scene.select_collection(0, walls.len());
+        tick_frames(&mut app, &mut now, 120);
+        if dismiss {
+            let _ = update(&mut app, Message::Exit);
+            tick_frames(&mut app, &mut now, 120);
+        }
+        let idx = if dismiss { 0 } else { 3 };
+        let hit = app.scene.render.hits.iter().find(|hit| hit.index == idx).unwrap();
+        let quad = hit.quad.unwrap();
+        let x = (quad[0][0] + quad[1][0]) * 0.5;
+        let y = quad[0][1] + 2.0;
+        assert_eq!(app.scene.render.hits.iter().find(|hit| hit.contains(x, y)).unwrap().index, idx);
+        drain_calls(&app);
+        let _ = update(&mut app, Message::Click(x, y, MouseButton::Left));
+        assert_eq!(app.scene.current, idx);
+        assert!(app.scene.collection_open_for(idx));
+        assert!(!drain_calls(&app).iter().any(|(method, _)| method == "wall.apply"));
+    }
+}
+
+#[test]
+fn collection_second_click_applies_the_raised_wallpaper() {
+    use crate::domain::input::MouseButton;
+    let mut app = test_app();
+    let walls: Vec<Value> = (0..8)
+        .map(|i| {
+            let mut item = wall(&format!("c{i}"), "static", i * 10, i);
+            item["path"] = json!(format!("/wp/c{i}.png"));
+            item
+        })
+        .collect();
+    seed(&mut app, &walls);
+    app.config.save_key(skwd_config::keys::general::CLOSE_ON_SELECTION, json!(false));
+    let _ = update(&mut app, Message::SetViewMode(String::from("collection")));
+    let mut now = Instant::now();
+    for settled in [false, true] {
+        for idx in [0, 3] {
+            app.scene.close_collection();
+            app.scene.set_current(0, walls.len());
+            tick_frames(&mut app, &mut now, 120);
+            let hit = app.scene.render.hits.iter().find(|hit| hit.index == idx).unwrap();
+            let quad = hit.quad.unwrap();
+            let x = (quad[0][0] + quad[1][0]) * 0.5;
+            let y = quad[0][1] + 5.0;
+            assert_eq!(
+                app.scene.render.hits.iter().find(|hit| hit.contains(x, y)).unwrap().index,
+                idx
+            );
+            let expected = app.library_session.library.catalog().items
+                [app.library_session.filtered[idx] as usize]
+                .path
+                .clone();
+            drain_calls(&app);
+            let _ = update(&mut app, Message::Click(x, y, MouseButton::Left));
+            assert_eq!(app.scene.current, idx);
+            assert!(!drain_calls(&app).iter().any(|(method, _)| method == "wall.apply"));
+            let (x, y) = if settled {
+                tick_frames(&mut app, &mut now, 120);
+                hit_center(&app, idx)
+            } else {
+                (x, y)
+            };
+            let _ = update(&mut app, Message::Click(x, y, MouseButton::Left));
+            let calls = drain_calls(&app);
+            let applies: Vec<_> =
+                calls.iter().filter(|(method, _)| method == "wall.apply").collect();
+            assert_eq!(applies.len(), 1, "settled={settled}, index={idx}");
+            assert_eq!(applies[0].1["path"], json!(expected));
+        }
+    }
+}
+
+#[test]
 fn depth_click_applies_the_visible_card_without_waiting_for_navigation() {
     use crate::domain::input::MouseButton;
     for moving in [false, true] {

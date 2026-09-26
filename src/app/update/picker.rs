@@ -199,6 +199,9 @@ fn remove_back_panel_tag(app: &mut App, fi: usize, x: f32, y: f32) -> bool {
 fn select_click(app: &mut App, idx: usize) -> Task<Message> {
     match app.scene.mode {
         Mode::Collection => {
+            if app.scene.collection_open_for(idx) {
+                return apply_task(app, idx);
+            }
             app.scene.select_collection(idx, app.library_session.filtered.len());
             app.retick();
             Task::none()
