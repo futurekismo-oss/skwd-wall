@@ -856,7 +856,10 @@ fn grid_card_becomes_effects_source() {
     );
 
     assert_eq!(app.scene.current, 1);
-    assert_eq!(app.panels.effects.as_ref().unwrap().source_path(), "/wp/chosen.webp");
+    assert_eq!(app.panels.effects.as_ref().unwrap().source_path(), "/walls/chosen.webp");
+    let calls = drain_calls(&app);
+    let (_, apply) = calls.iter().find(|(method, _)| method == "wall.apply").unwrap();
+    assert_eq!(apply["path"], "/walls/chosen.webp");
 }
 
 #[test]

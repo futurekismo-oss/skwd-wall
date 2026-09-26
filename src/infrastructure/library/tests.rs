@@ -18,6 +18,28 @@ fn paths() -> LibraryPaths<'static> {
 }
 
 #[test]
+fn static_source_path_survives_stale_picker_directories() {
+    let row = json!({
+        "key": "static:nested/still.png",
+        "name": "nested/still.png",
+        "type": "static",
+        "thumb": "/thumb/still.webp",
+        "path": "/data/壁纸/nested/still.png"
+    });
+    let cached = decode_cached(&row, paths()).unwrap();
+    let catalog = decode_list(&json!({"wallpapers": [row]}), paths());
+    assert_eq!(cached.path, "/data/壁纸/nested/still.png");
+    assert_eq!(catalog.items[0].path, cached.path);
+}
+
+#[test]
+fn static_legacy_path_normalizes_trailing_directory_slashes() {
+    let row = json!({"name":"still.png", "type":"static", "thumb":"/t.webp"});
+    let paths = LibraryPaths::new("/data/壁纸/", "/videos");
+    assert_eq!(decode_cached(&row, paths).unwrap().path, "/data/壁纸/still.png");
+}
+
+#[test]
 fn kind_paths_decode() {
     let catalog = decode_list(
         &json!({

@@ -17,7 +17,7 @@ impl<'a> LibraryPaths<'a> {
     }
 
     pub fn renamed_static_path(self, name: &str) -> String {
-        format!("{}/{name}", self.wallpaper_dir)
+        std::path::Path::new(self.wallpaper_dir).join(name).to_string_lossy().into_owned()
     }
 }
 
@@ -97,7 +97,12 @@ fn decode_row(row: &wall_proto::WallpaperItem, paths: LibraryPaths<'_>) -> Optio
     let we_id = row.we_id.clone().unwrap_or_default();
     let video_file = row.video_file.clone().unwrap_or_default();
     let path = match raw_kind {
-        wall_proto::kind::STATIC => paths.renamed_static_path(&name),
+        wall_proto::kind::STATIC => row
+            .path
+            .as_ref()
+            .filter(|path| !path.is_empty())
+            .cloned()
+            .unwrap_or_else(|| paths.renamed_static_path(&name)),
         wall_proto::kind::VIDEO if video_file.is_empty() => {
             format!("{}/{name}", paths.video_dir)
         }
