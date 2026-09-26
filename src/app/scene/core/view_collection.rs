@@ -8,12 +8,16 @@ use super::layout_helpers::CardSpec;
 use super::model::{RebuildCtx, RebuildSinks, SceneCore};
 
 impl SceneCore {
+    pub fn collection_open_for(&self, idx: usize) -> bool {
+        self.collection_card == Some(idx) && self.collection_open.target > 0.5
+    }
+
     pub fn select_collection(&mut self, idx: usize, count: usize) {
         if self.mode != Mode::Collection || count == 0 {
             return;
         }
         let idx = idx.min(count - 1);
-        if self.collection_card == Some(idx) && self.collection_open.target > 0.5 {
+        if self.collection_open_for(idx) {
             self.close_collection();
             return;
         }
