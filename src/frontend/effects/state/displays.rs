@@ -126,6 +126,12 @@ impl Effects {
         }
     }
 
+    pub fn set_theme_source(&mut self, connector: &str) {
+        for monitor in &mut self.displays.monitors {
+            monitor.theme_source = monitor.name == connector;
+        }
+    }
+
     pub fn set_mon_volume(&mut self, name: &str, volume: u32) {
         if let Some(monitor) =
             self.displays.monitors.iter_mut().find(|monitor| monitor.target == name)

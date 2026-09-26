@@ -25,7 +25,7 @@ impl Effects {
 
         let masthead: Element<'a, Message> = container(text("")).height(0.0).into();
         let index = self.apply_index(source, count, total, scale, palette);
-        let reading = self.display_reading_surface(count, scale, palette);
+        let reading = self.display_reading_surface(count, viewport, scale, palette);
         crate::frontend::ui::folio_sheet(
             masthead,
             index,
@@ -130,6 +130,7 @@ impl Effects {
     fn display_reading_surface<'a>(
         &'a self,
         count: usize,
+        viewport: (f32, f32),
         scale: f32,
         palette: &'a Palette,
     ) -> Element<'a, Message> {
@@ -200,8 +201,9 @@ impl Effects {
                 }),
             );
         } else {
+            let wide = super::monitor::tile_is_wide(viewport, scale);
             for monitor in &self.displays.monitors {
-                monitors = monitors.push(self.monitor_tile(monitor, scale, palette));
+                monitors = monitors.push(self.monitor_tile(monitor, scale, wide, palette));
             }
         }
         let targets = scrollable(monitors)

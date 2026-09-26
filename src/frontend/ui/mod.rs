@@ -32,9 +32,9 @@ pub use color::{
 };
 pub use help::{HelpIntent, help_overlay};
 pub use misc::{
-    FOLIO_INDEX_WIDTH, FOLIO_RULE_ALPHA, FadeFrame, Flow, NERD_FONT, Spinner, TYPE_SMALL, UI_FONT,
-    UI_FONT_FAMILY, bg_style, box_style, end, field_input, flat_button_style, folio_action,
-    folio_action_bar, folio_action_width, folio_action_width_in, folio_action_wrap,
+    FOLIO_BUTTON_HEIGHT, FOLIO_INDEX_WIDTH, FOLIO_RULE_ALPHA, FadeFrame, Flow, NERD_FONT, Spinner,
+    TYPE_SMALL, UI_FONT, UI_FONT_FAMILY, bg_style, box_style, end, field_input, flat_button_style,
+    folio_action, folio_action_bar, folio_action_width, folio_action_width_in, folio_action_wrap,
     folio_button_style, folio_destructive_action, folio_details, folio_field, folio_ghost_field,
     folio_horizontal_rule, folio_index_shell, folio_index_shell_tinted, folio_inline_bar,
     folio_line_button_style, folio_masthead, folio_rule, folio_scrim_style, folio_scroll_padding,

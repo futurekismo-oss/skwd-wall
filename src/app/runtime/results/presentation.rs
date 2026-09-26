@@ -162,6 +162,7 @@ impl App {
             }
             thumb_for(out)
         });
+        let theme_output = self.config.str_path(skwd_config::keys::display::THEME_OUTPUT);
         let mons: Vec<crate::frontend::effects::MonitorInfo> = outs
             .into_iter()
             .map(|out| {
@@ -170,6 +171,7 @@ impl App {
                 let connected = out.is_connected();
                 let lock_path =
                     format!("{}.{}", skwd_config::keys::display::OUTPUT_LOCKS, out.name);
+                let theme_source = out.name == theme_output;
                 crate::frontend::effects::MonitorInfo {
                     current_thumb: thumb_for(&out),
                     name: out.name,
@@ -190,6 +192,7 @@ impl App {
                     volume: out.volume,
                     fill: out.fill,
                     locked: self.config.flag_default_config(&lock_path),
+                    theme_source,
                     paused: out.paused,
                     manual_paused: out.manual_paused,
                     current: out.current,

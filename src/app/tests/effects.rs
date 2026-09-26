@@ -255,6 +255,68 @@ fn monitor_lock_shared_setting() {
 }
 
 #[test]
+fn monitor_theme_source_pins_and_rethemes() {
+    let mut app = test_app();
+    seed(&mut app, &[wall("main.png", "static", 5, 1)]);
+    app.config.save_key(skwd_config::keys::display::THEME_OUTPUT, json!("DP-1"));
+    app.panels.effects = Some(crate::frontend::effects::Effects::new(
+        Vec::new(),
+        String::from("/src.png"),
+        None,
+        0,
+        WallpaperKind::Static,
+        true,
+        100,
+        String::from("static:main"),
+    ));
+    app.daemon.pending.insert(9, Pending::Outputs);
+    respond(
+        &mut app,
+        9,
+        json!({
+            "outputs": [
+                {"name": "DP-1", "width": 1920, "height": 1080, "type": "static", "mute": true, "volume": 100},
+                {"name": "DP-2", "width": 1920, "height": 1080, "type": "static", "mute": true, "volume": 100}
+            ]
+        }),
+    );
+    let sources = |app: &App| {
+        app.panels
+            .effects
+            .as_ref()
+            .unwrap()
+            .monitors()
+            .iter()
+            .map(|monitor| monitor.theme_source)
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(sources(&app), [true, false]);
+    let _ = drain_calls(&app);
+
+    let _ = update(
+        &mut app,
+        Message::Effects(crate::frontend::effects::EffectsMsg::MonitorTheme(String::from("DP-2"))),
+    );
+    assert_eq!(app.config.str_path(skwd_config::keys::display::THEME_OUTPUT), "DP-2");
+    assert_eq!(sources(&app), [false, true]);
+    let calls = drain_calls(&app);
+    assert!(
+        calls
+            .iter()
+            .any(|(method, params)| method == "wall.retheme" && params["output"] == json!("DP-2")),
+        "{calls:?}"
+    );
+
+    let _ = update(
+        &mut app,
+        Message::Effects(crate::frontend::effects::EffectsMsg::MonitorTheme(String::from("DP-2"))),
+    );
+    assert_eq!(app.config.str_path(skwd_config::keys::display::THEME_OUTPUT), "");
+    assert_eq!(sources(&app), [false, false]);
+    assert!(drain_calls(&app).iter().all(|(method, _)| method != "wall.retheme"));
+}
+
+#[test]
 fn video_monitor_thumb_by_file() {
     let mut app = test_app();
     let mut vid = wall("Rainsong", "video", 5, 1);

@@ -121,6 +121,7 @@ fn selector_audio_groups() {
             volume,
             fill: String::new(),
             locked: false,
+            theme_source: false,
             paused: false,
             manual_paused: false,
             current,

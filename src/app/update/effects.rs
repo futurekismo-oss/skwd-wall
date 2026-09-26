@@ -89,6 +89,38 @@ pub(super) fn update(app: &mut App, msg: EffectsMsg) -> Task<Message> {
             app.retick();
             Task::none()
         }
+        EffectsMsg::MonitorTheme(output) => {
+            let Some(connector) = app
+                .panels
+                .effects
+                .as_ref()
+                .and_then(|effects| effects.connector_for_target(&output))
+                .map(str::to_string)
+            else {
+                return Task::none();
+            };
+            let pinned = app.config.str_path(skwd_config::keys::display::THEME_OUTPUT) == connector;
+            let next = if pinned { String::new() } else { connector.clone() };
+            super::settings_policy::save_value(
+                app,
+                skwd_config::keys::display::THEME_OUTPUT,
+                &json!(next),
+            );
+            effects_edit(app, |effects| effects.set_theme_source(&next));
+            if pinned {
+                app.show_toast(crate::i18n::tr("effects-colours-unpinned"));
+            } else {
+                app.daemon.client.call("wall.retheme", json!({"output": connector}));
+                app.theme.cache.clear();
+                app.invalidate_swatch();
+                app.show_toast(
+                    crate::i18n::tr_args!("effects-colours-pinned", output => connector),
+                );
+            }
+            app.invalidate_settings();
+            app.retick();
+            Task::none()
+        }
         EffectsMsg::MonitorHover(name) => {
             effects_edit(app, |eff| eff.set_hover(name));
             app.retick();

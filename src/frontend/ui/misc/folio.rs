@@ -13,7 +13,7 @@ use crate::frontend::ui::{UI_FONT, logical_padding, mirror_x, row, with_alpha};
 use super::typography::legible_type_scale;
 
 const BUTTON_FRAME: Duration = Duration::from_millis(16);
-const BUTTON_HEIGHT: f32 = 30.0;
+pub const BUTTON_HEIGHT: f32 = 30.0;
 
 pub const FOLIO_INDEX_WIDTH: f32 = 318.0;
 pub const FOLIO_SCRIM_ALPHA: f32 = 0.68;
