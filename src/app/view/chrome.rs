@@ -93,6 +93,8 @@ pub(crate) fn bar_show(app: &App) -> crate::frontend::ui::BarShow {
         colors: app.config.filter_show("colors"),
         theme: app.config.filter_show("theme"),
         tagcloud: app.config.filter_show("tagcloud"),
+        download: app.config.filter_show("download"),
+        playlists: app.config.filter_show("playlists"),
     }
 }
 

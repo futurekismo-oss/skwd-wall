@@ -1249,7 +1249,7 @@ dependencies = [
 [[package]]
 name = "iced_layershell"
 version = "0.19.1"
-source = "git+https://github.com/liixini/skwd-iced-layershell.git?rev=0329bd09e66ff4cbd4d354f6925543341710e394#0329bd09e66ff4cbd4d354f6925543341710e394"
+source = "git+ssh://git@build.liixini.com/liixini/skwd-iced-layershell.git?rev=fef83a1f223fd30561100aec452d08b77c4215b0#fef83a1f223fd30561100aec452d08b77c4215b0"
 dependencies = [
  "enumflags2",
  "futures",
@@ -1677,7 +1677,7 @@ dependencies = [
 [[package]]
 name = "layershellev"
 version = "0.19.1"
-source = "git+https://github.com/liixini/skwd-iced-layershell.git?rev=0329bd09e66ff4cbd4d354f6925543341710e394#0329bd09e66ff4cbd4d354f6925543341710e394"
+source = "git+ssh://git@build.liixini.com/liixini/skwd-iced-layershell.git?rev=fef83a1f223fd30561100aec452d08b77c4215b0#fef83a1f223fd30561100aec452d08b77c4215b0"
 dependencies = [
  "calloop 0.14.4",
  "calloop-wayland-source 0.4.1",

@@ -150,3 +150,103 @@ fn open_menus_keep_footprint() {
     app.chrome.bar.menu = Some(crate::frontend::ui::MenuKind::Backends);
     assert_eq!(filter_bar_footprint(&app, 1200.0, 700.0), theme_closed);
 }
+
+#[test]
+fn optional_filter_controls_persist_and_leave_no_bar_items() {
+    use crate::app::{Message, update};
+    use crate::frontend::settings::SettingsMsg;
+    use crate::frontend::ui::{BarAction, build_bar_with_tasks, verticalize_bar};
+    use crate::infrastructure::config::Config;
+    use skwd_config::keys::filter_bar;
+
+    for path in [
+        filter_bar::SHOW_TAG_CLOUD,
+        filter_bar::SHOW_ORIENT,
+        filter_bar::SHOW_PLAYLISTS,
+        filter_bar::SHOW_DOWNLOAD,
+    ] {
+        let mut app = test_app();
+        let original_filters = app.library_session.filters.clone();
+        for visible in [true, false, true] {
+            let _ = update(&mut app, Message::Settings(SettingsMsg::Toggle(path.into(), visible)));
+            let mut reopened = Config::from_data(json!({}));
+            reopened.config_path.clone_from(&app.config.config_path);
+            assert!(reopened.reload());
+            app.config = reopened;
+            assert_eq!(
+                app.config.filter_show(path.strip_prefix("filterBar.show.").unwrap()),
+                visible
+            );
+            let show = super::bar_show(&app);
+            for downloads_enabled in [false, true] {
+                for vertical in [false, true] {
+                    let mut model = build_bar_with_tasks(
+                        &app.library_session.filters,
+                        &[],
+                        false,
+                        0,
+                        0,
+                        1.0,
+                        downloads_enabled,
+                        false,
+                        false,
+                        &show,
+                        5000.0,
+                        false,
+                        false,
+                        None,
+                        &[],
+                    );
+                    if vertical {
+                        verticalize_bar(&mut model, 500.0, 1.0);
+                    }
+                    for (key, present) in [
+                        (
+                            filter_bar::SHOW_TAG_CLOUD,
+                            model
+                                .items
+                                .iter()
+                                .any(|item| matches!(item.action, Some(BarAction::TagCloud))),
+                        ),
+                        (
+                            filter_bar::SHOW_ORIENT,
+                            model
+                                .items
+                                .iter()
+                                .any(|item| matches!(item.action, Some(BarAction::Orient(_)))),
+                        ),
+                        (
+                            filter_bar::SHOW_PLAYLISTS,
+                            model
+                                .items
+                                .iter()
+                                .any(|item| matches!(item.action, Some(BarAction::Playlists))),
+                        ),
+                        (
+                            filter_bar::SHOW_DOWNLOAD,
+                            model
+                                .items
+                                .iter()
+                                .any(|item| matches!(item.action, Some(BarAction::Download))),
+                        ),
+                    ] {
+                        let expected = (key != path || visible)
+                            && (key != filter_bar::SHOW_DOWNLOAD || downloads_enabled);
+                        assert_eq!(
+                            present, expected,
+                            "{path}={visible}, {key}, vertical={vertical}"
+                        );
+                    }
+                    assert!(
+                        model
+                            .items
+                            .iter()
+                            .any(|item| matches!(item.action, Some(BarAction::Settings)))
+                    );
+                }
+            }
+            assert_eq!(app.library_session.filters.orient, original_filters.orient);
+            assert_eq!(app.library_session.filters.tags, original_filters.tags);
+        }
+    }
+}

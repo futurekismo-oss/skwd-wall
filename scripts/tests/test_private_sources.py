@@ -7,8 +7,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 SOURCES = {
     "iced_layershell": (
-        "https://github.com/liixini/skwd-iced-layershell.git",
-        "0329bd09e66ff4cbd4d354f6925543341710e394",
+        "ssh://git@build.liixini.com/liixini/skwd-iced-layershell.git",
+        "fef83a1f223fd30561100aec452d08b77c4215b0",
     ),
     "iced_wgpu": (
         "https://github.com/liixini/skwd-iced-wgpu.git",
@@ -16,6 +16,7 @@ SOURCES = {
     ),
 }
 PRIVATE_CHECKOUTS = {
+    "liixini/skwd-iced-layershell",
     "liixini/skwd-deck",
     "liixini/skwd-lens",
     "liixini/skwd-verify",
@@ -64,8 +65,14 @@ class PrivateSourcePolicyTests(unittest.TestCase):
         for name, (url, revision) in SOURCES.items():
             self.assertIn(url, (ROOT / "Cargo.toml").read_text())
             self.assertIn(revision, (ROOT / "Cargo.toml").read_text())
-            self.assertNotIn(f"repository: liixini/skwd-{name.replace('_', '-')}", workflow)
-        self.assertNotIn("GIT_CONFIG_COUNT", workflow)
+            if name == "iced_layershell":
+                self.assertIn("repository: liixini/skwd-iced-layershell", workflow)
+                self.assertIn(f"ref: {revision}", workflow)
+            else:
+                self.assertNotIn(f"repository: liixini/skwd-{name.replace('_', '-')}", workflow)
+        self.assertIn('GIT_CONFIG_COUNT: "1"', workflow)
+        self.assertIn('GIT_CONFIG_KEY_0: "url.file://${{ github.workspace }}/suite/skwd-iced-layershell.insteadOf"', workflow)
+        self.assertIn(f'GIT_CONFIG_VALUE_0: "{SOURCES["iced_layershell"][0]}"', workflow)
         verify_revision = "a6478a04192f4720790c17fbede941cf08be9d60"
         self.assertIn("repository: liixini/skwd-verify", workflow)
         self.assertIn(f"ref: {verify_revision}", workflow)

@@ -36,6 +36,8 @@ pub struct BarShow {
     pub colors: bool,
     pub theme: bool,
     pub tagcloud: bool,
+    pub download: bool,
+    pub playlists: bool,
 }
 
 impl BarShow {
@@ -53,6 +55,8 @@ impl BarShow {
             colors: true,
             theme: true,
             tagcloud: true,
+            download: true,
+            playlists: true,
         }
     }
 

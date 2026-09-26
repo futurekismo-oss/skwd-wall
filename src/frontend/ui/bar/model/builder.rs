@@ -104,7 +104,7 @@ pub fn build_bar_with_tasks(
         push_item(&mut items, &mut x, scale, "\u{f0349}", true, active, action);
     }
 
-    if downloads_enabled {
+    if downloads_enabled && show.download {
         push_item(&mut items, &mut x, scale, "\u{f01da}", true, false, Some(BarAction::Download));
     }
 
@@ -112,7 +112,9 @@ pub fn build_bar_with_tasks(
         audio_items(&mut items, &mut x, scale, audio_muted);
     }
 
-    push_item(&mut items, &mut x, scale, "\u{f0cb8}", true, false, Some(BarAction::Playlists));
+    if show.playlists {
+        push_item(&mut items, &mut x, scale, "\u{f0cb8}", true, false, Some(BarAction::Playlists));
+    }
 
     push_item(&mut items, &mut x, scale, "\u{f0493}", true, false, Some(BarAction::Settings));
 

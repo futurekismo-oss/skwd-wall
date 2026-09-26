@@ -907,6 +907,21 @@ pub(super) fn tab_filter(builder: &mut Builder<'_>, folders: &[String]) {
         keys::filter_bar::SHOW_TAG_CLOUD,
     );
     builder.toggle(
+        tr("settings-filter-show-shape-label"),
+        tr("settings-filter-show-shape-desc"),
+        keys::filter_bar::SHOW_ORIENT,
+    );
+    builder.toggle(
+        tr("settings-filter-show-playlists-label"),
+        tr("settings-filter-show-playlists-desc"),
+        keys::filter_bar::SHOW_PLAYLISTS,
+    );
+    builder.toggle(
+        tr("settings-filter-show-download-label"),
+        tr("settings-filter-show-download-desc"),
+        keys::filter_bar::SHOW_DOWNLOAD,
+    );
+    builder.toggle(
         tr("settings-filter-show-resolution-label"),
         tr("settings-filter-show-resolution-desc"),
         keys::filter_bar::SHOW_RESOLUTION,
