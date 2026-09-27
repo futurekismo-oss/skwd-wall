@@ -81,6 +81,7 @@ impl Drop for Decoded {
 struct Queues {
     visible: VecDeque<Job>,
     backfill: VecDeque<Job>,
+    closed: bool,
 }
 
 struct PoolState {
@@ -102,13 +103,33 @@ struct PoolState {
 #[derive(Clone)]
 pub struct DecodePool {
     state: Arc<PoolState>,
+    _shutdown: Arc<PoolShutdown>,
+}
+
+struct PoolShutdown(Arc<PoolState>);
+
+impl Drop for PoolShutdown {
+    fn drop(&mut self) {
+        {
+            let mut queues = self.0.queues.lock().unwrap_or_else(PoisonError::into_inner);
+            queues.closed = true;
+            queues.visible.clear();
+            queues.backfill.clear();
+        }
+        self.0.cv.notify_all();
+        self.0.read_pool.close();
+    }
 }
 
 impl DecodePool {
     pub fn start(uploads: UploadQueue, tx: UnboundedSender<Wake>, workers: usize) -> Self {
         let now = Instant::now();
         let state = Arc::new(PoolState {
-            queues: Mutex::new(Queues { visible: VecDeque::new(), backfill: VecDeque::new() }),
+            queues: Mutex::new(Queues {
+                visible: VecDeque::new(),
+                backfill: VecDeque::new(),
+                closed: false,
+            }),
             cv: Condvar::new(),
             uploads,
             done: Mutex::new(Vec::new()),
@@ -122,6 +143,9 @@ impl DecodePool {
             tx,
             read_pool: Arc::new(BufPool::new_bounded(NEAR_CONTAINER_BYTES, workers)),
         });
+        // Workers own state, but only clients keep the pool open. Install the
+        // shutdown guard before spawning so partial startup also releases workers.
+        let pool = Self { _shutdown: Arc::new(PoolShutdown(state.clone())), state: state.clone() };
         for idx in 0..workers {
             let worker_state = state.clone();
             std::thread::Builder::new()
@@ -129,7 +153,7 @@ impl DecodePool {
                 .spawn(move || worker_loop(&worker_state))
                 .expect("spawn decode worker");
         }
-        Self { state }
+        pool
     }
 
     pub fn enqueue(&self, job: Job, visible: bool) {
@@ -179,8 +203,7 @@ impl DecodePool {
 }
 
 fn worker_loop(state: &PoolState) {
-    loop {
-        let job = next_job(state);
+    while let Some(job) = next_job(state) {
         state.in_flight.fetch_add(1, Ordering::AcqRel);
         if job.tier == 1
             && !state.wanted.lock().unwrap_or_else(PoisonError::into_inner).contains(&job.store_idx)
@@ -219,14 +242,17 @@ fn worker_loop(state: &PoolState) {
     }
 }
 
-fn next_job(state: &PoolState) -> Job {
+fn next_job(state: &PoolState) -> Option<Job> {
     let mut queues = state.queues.lock().unwrap_or_else(PoisonError::into_inner);
     loop {
+        if queues.closed {
+            return None;
+        }
         if let Some(job) = queues.visible.pop_back() {
-            return job;
+            return Some(job);
         }
         if let Some(job) = queues.backfill.pop_front() {
-            return job;
+            return Some(job);
         }
         force_wake(state);
         queues = state.cv.wait(queues).unwrap_or_else(PoisonError::into_inner);
@@ -377,7 +403,7 @@ fn decode_path(path: &str, job: &Job, read_pool: &Arc<BufPool>) -> Result<Decode
                 metadata.len()
             ));
         }
-        let mut data = read_pool.take_bounded();
+        let mut data = read_pool.take_bounded().ok_or("preview decoder closed")?;
         let read = std::fs::File::open(path).and_then(|mut file| {
             file.read_exact(&mut data)?;
             let mut extra = [0u8; 1];

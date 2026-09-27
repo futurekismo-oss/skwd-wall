@@ -120,13 +120,13 @@ fn near_pool_recycles() {
     let temp = std::env::temp_dir().join(format!("skwd_near_pool_{}.bc7", std::process::id()));
     let path = temp.to_str().unwrap();
     let pool = read_pool(1);
-    let seed = pool.take_bounded();
+    let seed = pool.take_bounded().unwrap();
     let pointer = seed.as_ptr();
     pool.put(seed);
 
     std::fs::write(&temp, vec![9u8; NEAR_CONTAINER_BYTES]).unwrap();
     assert!(decode_path(path, &near_job(), &pool).is_err());
-    let recovered = pool.take_bounded();
+    let recovered = pool.take_bounded().unwrap();
     assert_eq!(recovered.as_ptr(), pointer);
     pool.put(recovered);
 
@@ -144,15 +144,15 @@ fn near_pool_recycles() {
         recycle: decoded.recycle.take(),
     };
     drop(upload);
-    let recovered = pool.take_bounded();
+    let recovered = pool.take_bounded().unwrap();
     assert_eq!(recovered.as_ptr(), pointer);
     pool.put(recovered);
 
     let cancel_pool = read_pool(1);
-    let data = cancel_pool.take_bounded();
+    let data = cancel_pool.take_bounded().unwrap();
     let pointer = data.as_ptr();
     drop(super::Decoded { data, blocks: true, recycle: Some(cancel_pool.clone()) });
-    let recovered = cancel_pool.take_bounded();
+    let recovered = cancel_pool.take_bounded().unwrap();
     assert_eq!(recovered.as_ptr(), pointer);
 
     std::fs::write(&temp, vec![0u8; NEAR_CONTAINER_BYTES - 1]).unwrap();
@@ -211,7 +211,7 @@ fn near_pool_scroll_measurement() {
 
     let pool = read_pool(4);
     if mode == "candidate" {
-        let buffers = (0..4).map(|_| pool.take_bounded()).collect::<Vec<_>>();
+        let buffers = (0..4).map(|_| pool.take_bounded().unwrap()).collect::<Vec<_>>();
         for buffer in buffers {
             pool.put(buffer);
         }
@@ -407,6 +407,83 @@ fn test_pool(workers: usize) -> (DecodePool, super::UploadQueue, WakeRx) {
     (DecodePool::start(uploads.clone(), tx, workers), uploads, rx)
 }
 
+fn assert_pool_released(state: &std::sync::Weak<super::PoolState>) {
+    let deadline = Instant::now() + Duration::from_secs(2);
+    while state.strong_count() != 0 && Instant::now() < deadline {
+        std::thread::sleep(Duration::from_millis(1));
+    }
+    assert_eq!(state.strong_count(), 0, "decoder workers retained the dropped pool");
+}
+
+#[test]
+fn pool_drop_releases_idle_workers() {
+    for _ in 0..16 {
+        let (pool, _uploads, _rx) = test_pool(6);
+        let state = Arc::downgrade(&pool.state);
+        drop(pool);
+        assert_pool_released(&state);
+    }
+}
+
+#[test]
+fn pool_clone_remains_usable_until_last_drop() {
+    let (pool, _uploads, _rx) = test_pool(1);
+    let state = Arc::downgrade(&pool.state);
+    let remaining = pool.clone();
+    drop(pool);
+    remaining.enqueue(far_job_for(1, "missing-preview.bc1"), true);
+    let deadline = Instant::now() + Duration::from_secs(2);
+    let mut failed = Vec::new();
+    while failed.is_empty() && Instant::now() < deadline {
+        failed = remaining.drain_done().failed;
+        std::thread::sleep(Duration::from_millis(1));
+    }
+    assert_eq!(failed.len(), 1);
+    drop(remaining);
+    assert_pool_released(&state);
+}
+
+#[test]
+fn pool_concurrent_last_clients_release_workers() {
+    let (pool, _uploads, _rx) = test_pool(2);
+    let state = Arc::downgrade(&pool.state);
+    let barrier = Arc::new(std::sync::Barrier::new(2));
+    let other = pool.clone();
+    let other_barrier = barrier.clone();
+    let thread = std::thread::spawn(move || {
+        other_barrier.wait();
+        drop(other);
+    });
+    barrier.wait();
+    drop(pool);
+    thread.join().unwrap();
+    assert_pool_released(&state);
+}
+
+#[test]
+fn pool_drop_releases_worker_with_exhausted_read_buffers() {
+    let temp = std::env::temp_dir().join(format!("skwd_drop_{}.bc7", std::process::id()));
+    std::fs::write(&temp, skb1_container()).unwrap();
+    let (pool, _uploads, _rx) = test_pool(1);
+    let state = Arc::downgrade(&pool.state);
+    let buffers = pool.state.read_pool.clone();
+    let held_buffer = buffers.take_bounded().unwrap();
+    pool.set_wanted(HashSet::from([8]));
+    pool.enqueue(Job { tier: 1, w: 640, h: 360, ..far_job_for(8, temp.to_str().unwrap()) }, true);
+    let deadline = Instant::now() + Duration::from_secs(2);
+    while pool.state.in_flight.load(std::sync::atomic::Ordering::Acquire) == 0
+        && Instant::now() < deadline
+    {
+        std::thread::sleep(Duration::from_millis(1));
+    }
+    assert_eq!(pool.state.in_flight.load(std::sync::atomic::Ordering::Acquire), 1);
+    drop(pool);
+    assert_pool_released(&state);
+    buffers.put(held_buffer);
+    assert!(buffers.take_bounded().is_none());
+    std::fs::remove_file(temp).unwrap();
+}
+
 fn skb1_container() -> Vec<u8> {
     let mut levels = Vec::new();
     let (mut width, mut height) = (640u32, 360u32);
@@ -442,7 +519,7 @@ fn pool_lifo_then_fifo() {
     pool.enqueue(far_job_for(3, "unused"), true);
     pool.enqueue(far_job_for(4, "unused"), true);
 
-    let order = (0..4).map(|_| super::next_job(&pool.state).store_idx).collect::<Vec<_>>();
+    let order = (0..4).map(|_| super::next_job(&pool.state).unwrap().store_idx).collect::<Vec<_>>();
     assert_eq!(order, vec![4, 3, 1, 2]);
 }
 
