@@ -180,6 +180,9 @@ nix profile install github:liixini/skwd-wall/nix#default
 # If you're using KDE Plasma you need the KDE Plasma plugin
 nix profile install github:liixini/skwd-wall/nix#skwd-paper-plasma
 
+# Optional Steam Client Workshop support for downloading Wallpaper Engine items without Steamcmd
+nix profile install github:liixini/skwd-wall/nix#skwd-deck-steamworks
+
 # run with (or put in a keybind, convenient script... up to you)...
 skwd-wall-v2
 ```
