@@ -117,3 +117,8 @@ settings-search-control-presets = 预设 已保存样式 preset saved style
 settings-search-control-static = 状态 信息 遥测 status information telemetry
 settings-search-control-code = 代码 配置 code configuration
 settings-search-control-preview = 预览 当前 参考 preview current reference
+
+settings-background-label = 背景
+settings-background-color = 颜色
+settings-background-blur = 模糊
+settings-background-inherit = 使用全局设置

@@ -119,3 +119,8 @@ settings-search-control-presets = preajuste estilo guardado
 settings-search-control-static = estado información telemetría
 settings-search-control-code = código configuración
 settings-search-control-preview = vista previa referencia actual
+
+settings-background-label = Fondo
+settings-background-color = Color
+settings-background-blur = Desenfoque
+settings-background-inherit = Usar global

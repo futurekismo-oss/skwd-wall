@@ -117,3 +117,8 @@ settings-search-control-presets = предустановка сохранённ�
 settings-search-control-static = состояние информация телеметрия status information telemetry
 settings-search-control-code = код конфигурация code configuration
 settings-search-control-preview = предпросмотр текущий образец preview current reference
+
+settings-background-label = Фон
+settings-background-color = Цвет
+settings-background-blur = Размытие
+settings-background-inherit = Использовать общие настройки

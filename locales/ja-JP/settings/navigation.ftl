@@ -117,3 +117,8 @@ settings-search-control-presets = プリセット 保存済みスタイル prese
 settings-search-control-static = ステータス 情報 テレメトリ status information telemetry
 settings-search-control-code = コード 設定 code configuration
 settings-search-control-preview = プレビュー 現在 参照 preview current reference
+
+settings-background-label = 背景
+settings-background-color = 色
+settings-background-blur = ぼかし
+settings-background-inherit = 全体設定を使用

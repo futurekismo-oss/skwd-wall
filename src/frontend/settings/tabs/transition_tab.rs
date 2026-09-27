@@ -101,6 +101,7 @@ pub(super) fn tab_transitions(builder: &mut Builder<'_>) {
             options: family_opts,
             current: family.to_string(),
             disabled: Vec::new(),
+            background: None,
         },
     );
     if family != "random" {

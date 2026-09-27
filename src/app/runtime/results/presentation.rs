@@ -191,6 +191,9 @@ impl App {
                     mute: out.mute,
                     volume: out.volume,
                     fill: out.fill,
+                    background: crate::frontend::settings::background::BackgroundControl::default(),
+                    background_reveal: 0.0,
+                    background_picker: 0.0,
                     locked: self.config.flag_default_config(&lock_path),
                     theme_source,
                     paused: out.paused,
@@ -203,6 +206,7 @@ impl App {
         if let Some(eff) = self.panels.effects.as_mut() {
             eff.set_monitors(mons);
         }
+        crate::app::update::settings_background::sync_monitors(self);
     }
 
     pub(super) fn on_demo_outputs(&mut self, result: crate::contracts::daemon::OutputsResult) {

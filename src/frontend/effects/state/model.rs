@@ -54,6 +54,9 @@ pub struct MonitorInfo {
     pub mute: bool,
     pub volume: u32,
     pub fill: String,
+    pub background: crate::frontend::settings::background::BackgroundControl,
+    pub background_reveal: f32,
+    pub background_picker: f32,
     pub locked: bool,
     pub theme_source: bool,
     pub paused: bool,
@@ -202,6 +205,10 @@ impl Effects {
     #[cfg(test)]
     pub fn effect_id(&self) -> &str {
         &self.editor.selected_id
+    }
+
+    pub fn monitors_mut(&mut self) -> &mut [MonitorInfo] {
+        &mut self.displays.monitors
     }
 
     pub fn monitors(&self) -> &[MonitorInfo] {

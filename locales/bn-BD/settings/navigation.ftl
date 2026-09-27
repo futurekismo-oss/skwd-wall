@@ -117,3 +117,8 @@ settings-search-control-presets = প্রিসেট সংরক্ষিত
 settings-search-control-static = অবস্থা তথ্য টেলিমেট্রি status information telemetry
 settings-search-control-code = কোড কনফিগারেশন code configuration
 settings-search-control-preview = প্রিভিউ বর্তমান রেফারেন্স preview current reference
+
+settings-background-label = পটভূমি
+settings-background-color = রং
+settings-background-blur = ঝাপসা
+settings-background-inherit = সাধারণ সেটিং ব্যবহার করুন

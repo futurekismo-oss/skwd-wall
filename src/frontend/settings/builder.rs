@@ -188,6 +188,8 @@ impl Builder<'_> {
                     .collect(),
                 current,
                 disabled: disabled.iter().map(|key| (*key).to_string()).collect(),
+                background: (path == crate::contracts::settings::keys::display::FILL_MODE)
+                    .then(|| super::background::BackgroundControl::new(self.cfg, "")),
             },
         );
     }
@@ -203,7 +205,14 @@ impl Builder<'_> {
         self.row(
             title,
             desc,
-            Control::Chips { path: path.to_string(), options, current, disabled: Vec::new() },
+            Control::Chips {
+                path: path.to_string(),
+                options,
+                current,
+                disabled: Vec::new(),
+                background: (path == crate::contracts::settings::keys::display::FILL_MODE)
+                    .then(|| super::background::BackgroundControl::new(self.cfg, "")),
+            },
         );
     }
 

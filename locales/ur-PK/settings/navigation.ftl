@@ -117,3 +117,8 @@ settings-search-control-presets = پری سیٹ محفوظ انداز preset sav
 settings-search-control-static = حیثیت معلومات ٹیلی میٹری status information telemetry
 settings-search-control-code = کوڈ کنفیگریشن code configuration
 settings-search-control-preview = پیش منظر موجودہ حوالہ preview current reference
+
+settings-background-label = پس منظر
+settings-background-color = رنگ
+settings-background-blur = دھندلا پن
+settings-background-inherit = عمومی ترتیب استعمال کریں

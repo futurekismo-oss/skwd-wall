@@ -14,6 +14,7 @@ mod post_update;
 mod scene_properties;
 mod schedule;
 mod settings;
+pub(in crate::app) mod settings_background;
 pub(in crate::app) mod settings_policy;
 mod tags;
 pub(crate) mod theme;

@@ -200,6 +200,18 @@ pub(super) fn mon_fill(app: &mut App, output: &str, mode: &str) -> Task<Message>
         .and_then(|effects| effects.monitors().iter().find(|monitor| monitor.target == output))
         .is_some_and(|mon| mon.fill == mode);
     let key = format!("display.fillModes.{connector}");
+    let old = app.config.str_path(&key);
+    let old = if old.is_empty() {
+        app.config.str_path(skwd_config::keys::display::FILL_MODE)
+    } else {
+        old
+    };
+    let next = if clearing {
+        app.config.str_path(skwd_config::keys::display::FILL_MODE)
+    } else {
+        mode.to_string()
+    };
+    super::settings_background::animate_placement(app, &key, &old, &next);
     if clearing {
         app.config.remove_key(&key);
         app.config.persist();

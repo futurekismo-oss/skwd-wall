@@ -1,4 +1,5 @@
 mod action;
+pub mod background;
 mod builder;
 mod folio;
 mod input_ids;

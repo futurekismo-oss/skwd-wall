@@ -117,3 +117,8 @@ settings-search-control-presets = إعداد مسبق نمط محفوظ preset s
 settings-search-control-static = حالة معلومات قياسات status information telemetry
 settings-search-control-code = كود إعداد code configuration
 settings-search-control-preview = معاينة الحالي مرجع preview current reference
+
+settings-background-label = الخلفية
+settings-background-color = اللون
+settings-background-blur = تمويه
+settings-background-inherit = استخدام الإعداد العام

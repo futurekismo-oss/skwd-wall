@@ -45,6 +45,7 @@ pub enum Control {
         options: Vec<(String, String)>,
         current: String,
         disabled: Vec<String>,
+        background: Option<super::background::BackgroundControl>,
     },
     MotionWeights {
         weights: Vec<(String, String, ActionId)>,

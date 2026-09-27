@@ -146,7 +146,8 @@ impl App {
             || (self.panels.settings.open && !self.panels.settings.tab_anim.settled())
             || (self.panels.settings.open && !self.panels.settings.section_anim.settled())
             || (self.panels.settings.open && !self.panels.settings.control_anim.settled())
-            || (self.panels.settings.open && self.panels.settings.bars_animating())
+            || ((self.panels.settings.open || self.panels.effects.is_some())
+                && self.panels.settings.bars_animating())
             || self
                 .panels
                 .schedule
@@ -489,7 +490,10 @@ impl App {
         if self.panels.settings.open {
             self.panels.settings.section_anim.tick(dt);
             self.panels.settings.control_anim.tick(dt);
+        }
+        if self.panels.settings.open || self.panels.effects.is_some() {
             self.panels.settings.tick_bars(dt);
+            crate::app::update::settings_background::sync_monitors(self);
         }
     }
 }

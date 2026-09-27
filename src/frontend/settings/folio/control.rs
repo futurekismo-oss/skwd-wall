@@ -345,6 +345,7 @@ pub(super) fn widget<'a>(
     fade: f32,
     armed: Option<ActionId>,
     motion: MotionProfile,
+    reveals: Option<&HashMap<String, crate::frontend::animation::Tween>>,
 ) -> Element<'a, Message> {
     match control {
         Control::AppTheme { app } => {
@@ -605,20 +606,34 @@ pub(super) fn widget<'a>(
             fade,
             motion,
         ),
-        Control::Chips { path, options, current, disabled } => choice_buttons(
-            &path,
-            options,
-            &current,
-            &disabled,
-            &[],
-            keyboard_focused,
-            focused_choice,
-            available_width,
-            scale,
-            palette,
-            fade,
-            motion,
-        ),
+        Control::Chips { path, options, current, disabled, background } => {
+            let choices = choice_buttons(
+                &path,
+                options,
+                &current,
+                &disabled,
+                &[],
+                keyboard_focused,
+                focused_choice,
+                available_width,
+                scale,
+                palette,
+                fade,
+                motion,
+            );
+            if let Some(background) = background {
+                let shown = matches!(current.as_str(), "center" | "fit");
+                let reveal = reveals
+                    .and_then(|map| map.get(&format!("background:{path}")))
+                    .map_or(if shown { 1.0 } else { 0.0 }, |value| value.x);
+                let picker = reveals
+                    .and_then(|map| map.get(&background.picker_id()))
+                    .map_or(0.0, |value| value.x);
+                column![choices, background.view(reveal, picker, scale, palette)].into()
+            } else {
+                choices
+            }
+        }
         Control::MotionWeights { weights } => {
             let mut group = row![].spacing(8.0 * scale);
             for (label, key, reset) in weights {

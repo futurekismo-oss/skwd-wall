@@ -896,6 +896,7 @@ fn picker_layout_field<'a>(
         fade,
         focus.armed,
         motion,
+        Some(focus.bar_reveals),
     );
     let line = if focused || locked { palette.primary } else { palette.outline };
     mouse_area(
@@ -1611,6 +1612,7 @@ fn compact_inline_field<'a>(
         fade,
         None,
         motion,
+        None,
     );
     crate::frontend::ui::folio_inline_bar(
         copy,
@@ -1794,21 +1796,40 @@ fn compact_group_field<'a>(
         .into()
     };
     let (editor, options_height) = match control {
-        Control::StackBar { rows, .. } => (
-            detail_rows(
-                rows,
-                index,
-                values,
-                has_selected_preset,
-                available_width - 18.0 * scale,
-                scale,
-                palette,
-                fade,
-                focus,
-                motion,
-            ),
-            176.0,
-        ),
+        Control::StackBar { rows, .. } => {
+            let background_height: f32 = rows
+                .iter()
+                .filter_map(|row| {
+                    let Control::Chips { path, current, background: Some(background), .. } =
+                        &row.control
+                    else {
+                        return None;
+                    };
+                    let reveal = focus.bar_reveals.get(&format!("background:{path}")).map_or(
+                        if matches!(current.as_str(), "center" | "fit") { 1.0 } else { 0.0 },
+                        |value| value.x,
+                    );
+                    let picker =
+                        focus.bar_reveals.get(&background.picker_id()).map_or(0.0, |value| value.x);
+                    Some((52.0 + 192.0 * picker) * crate::frontend::animation::smoothstep(reveal))
+                })
+                .sum();
+            (
+                detail_rows(
+                    rows,
+                    index,
+                    values,
+                    has_selected_preset,
+                    available_width - 18.0 * scale,
+                    scale,
+                    palette,
+                    fade,
+                    focus,
+                    motion,
+                ),
+                176.0 + background_height,
+            )
+        }
         control => (
             control::widget(
                 control,
@@ -1822,6 +1843,7 @@ fn compact_group_field<'a>(
                 fade,
                 focus.armed,
                 motion,
+                Some(focus.bar_reveals),
             ),
             110.0,
         ),
@@ -1981,6 +2003,7 @@ fn field<'a>(
         fade,
         focus.armed,
         motion,
+        Some(focus.bar_reveals),
     );
     let body = column![
         container(text(""))
@@ -2113,6 +2136,7 @@ fn detail_rows<'a>(
             fade,
             focus.armed,
             motion,
+            Some(focus.bar_reveals),
         );
         content = content.push(
             column![

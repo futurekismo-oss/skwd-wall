@@ -1272,3 +1272,114 @@ fn deleting_a_reference_to_the_active_model_stops_search_before_removal() {
     assert_eq!(app.config.str_path(skwd_config::keys::semantic::MANIFEST), "");
     assert_eq!(app.config.array_len(skwd_config::keys::semantic::MODELS), 0);
 }
+
+#[test]
+fn wallpaper_background_retains_color_and_monitor_inheritance() {
+    use crate::frontend::settings::{SettingsMsg, background::BackgroundControl};
+    let mut app = test_app();
+    app.config.set_key("display.fillColor", json!("#112233"));
+    let _ = update(
+        &mut app,
+        Message::Settings(SettingsMsg::BackgroundMode("DP-1".into(), "blur".into())),
+    );
+    let _ = update(
+        &mut app,
+        Message::Settings(SettingsMsg::BackgroundColor("DP-1".into(), "#cc8844".into())),
+    );
+    let _ = update(&mut app, Message::Settings(SettingsMsg::BackgroundCommit("DP-1".into())));
+    let _ = update(
+        &mut app,
+        Message::Settings(SettingsMsg::BackgroundMode("DP-1".into(), "blur".into())),
+    );
+    assert_eq!(BackgroundControl::new(&app.config, "DP-1").color, "#cc8844");
+    assert_eq!(BackgroundControl::new(&app.config, "DP-2").color, "#112233");
+    let _ = update(
+        &mut app,
+        Message::Settings(SettingsMsg::BackgroundMode("DP-1".into(), "inherit".into())),
+    );
+    assert!(BackgroundControl::new(&app.config, "DP-1").inherited);
+    assert_eq!(BackgroundControl::new(&app.config, "DP-1").color, "#112233");
+    let _ = update(
+        &mut app,
+        Message::Settings(SettingsMsg::BackgroundMode("DP-1".into(), "color".into())),
+    );
+    assert_eq!(BackgroundControl::new(&app.config, "DP-1").color, "#cc8844");
+    let saved: Value =
+        serde_json::from_slice(&std::fs::read(&app.config.config_path).unwrap()).unwrap();
+    assert_eq!(saved["display"]["backgroundColors"]["DP-1"], "#cc8844");
+}
+
+#[test]
+fn wallpaper_background_reveal_animates_and_tracks_inherited_placement() {
+    use crate::frontend::settings::SettingsMsg;
+    let mut app = test_app();
+    let _ = update(
+        &mut app,
+        Message::Settings(SettingsMsg::Pick("display.fillMode".into(), "center".into())),
+    );
+    app.panels.settings.tick_bars(0.05);
+    let reveal = app.panels.settings.bar_reveals["background:display.fillMode"].x;
+    assert!(reveal > 0.0 && reveal < 1.0);
+    for _ in 0..20 {
+        app.panels.settings.tick_bars(0.05);
+    }
+    assert_eq!(app.panels.settings.bar_reveals["background:display.fillMode"].x, 1.0);
+    let motion = app.motion_profile();
+    app.panels.settings.open_bar("background:display.fillModes.DP-1".into(), motion);
+    for _ in 0..20 {
+        app.panels.settings.tick_bars(0.05);
+    }
+    let _ = update(
+        &mut app,
+        Message::Settings(SettingsMsg::Pick("display.fillMode".into(), "fill".into())),
+    );
+    assert_eq!(app.panels.settings.bar_reveals["background:display.fillModes.DP-1"].target, 0.0);
+    app.panels.settings.tick_bars(0.05);
+    let reveal = app.panels.settings.bar_reveals["background:display.fillMode"].x;
+    assert!(reveal > 0.0 && reveal < 1.0);
+    for _ in 0..20 {
+        app.panels.settings.tick_bars(0.05);
+    }
+    assert!(!app.panels.settings.bars_animating());
+    assert!(!app.panels.settings.bar_reveals.contains_key("background:display.fillMode"));
+}
+
+#[test]
+fn wallpaper_background_survives_output_refresh_with_inherited_placement() {
+    use crate::contracts::daemon::{OutputStatus, OutputsResult};
+    let mut app = test_app();
+    app.config.set_key("display.fillMode", json!("center"));
+    app.config.set_key("display.fillColor", json!("#234567"));
+    app.panels.effects = Some(crate::frontend::effects::Effects::new(
+        Vec::new(),
+        String::from("/still.png"),
+        None,
+        0,
+        WallpaperKind::Static,
+        false,
+        100,
+        String::from("static:/still.png"),
+    ));
+    let outputs = OutputsResult {
+        outputs: vec![OutputStatus {
+            name: String::from("DP-1"),
+            path: String::from("/still.png"),
+            ..OutputStatus::default()
+        }],
+    };
+    app.on_outputs(outputs.clone());
+    let monitor = &app.panels.effects.as_ref().unwrap().monitors()[0];
+    assert!(monitor.background.inherited);
+    assert_eq!(monitor.background.color, "#234567");
+    assert_eq!(monitor.background_reveal, 1.0);
+    let motion = app.motion_profile();
+    app.panels.settings.open_bar("background-picker:DP-1".into(), motion);
+    for _ in 0..20 {
+        app.panels.settings.tick_bars(0.05);
+    }
+    app.on_outputs(outputs);
+    let monitor = &app.panels.effects.as_ref().unwrap().monitors()[0];
+    assert_eq!(monitor.background_reveal, 1.0);
+    assert_eq!(monitor.background_picker, 1.0);
+    assert_eq!(monitor.background.color, "#234567");
+}

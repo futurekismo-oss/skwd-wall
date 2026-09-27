@@ -31,6 +31,7 @@ pub(super) fn tab_selector(builder: &mut Builder<'_>) {
                 .collect(),
             current: display_mode.to_string(),
             disabled: Vec::new(),
+            background: None,
         },
     );
     let filter_speed = match cfg.text(keys::motion::FILTER_SWAP_SPEED).as_str() {

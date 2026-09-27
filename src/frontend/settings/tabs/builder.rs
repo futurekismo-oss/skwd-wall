@@ -183,6 +183,10 @@ fn compose_displays(
                 options: fill_modes.into(),
                 current: fill,
                 disabled: Vec::new(),
+                background: Some(crate::frontend::settings::background::BackgroundControl::new(
+                    cfg,
+                    &output.name,
+                )),
             },
         };
         let lock_path = format!("{}.{name}", keys::display::OUTPUT_LOCKS, name = output.name);

@@ -117,3 +117,8 @@ settings-search-control-presets = प्रीसेट सहेजी शै�
 settings-search-control-static = स्थिति जानकारी टेलीमेट्री status information telemetry
 settings-search-control-code = कोड कॉन्फ़िगरेशन code configuration
 settings-search-control-preview = पूर्वावलोकन वर्तमान संदर्भ preview current reference
+
+settings-background-label = पृष्ठभूमि
+settings-background-color = रंग
+settings-background-blur = धुंधलापन
+settings-background-inherit = वैश्विक सेटिंग इस्तेमाल करें

@@ -56,6 +56,7 @@ fn disabled_choices_are_skipped_by_keyboard_navigation() {
         ],
         current: String::from("tinier"),
         disabled: vec![String::from("tinier")],
+        background: None,
     };
 
     assert_eq!(initial_choice(&control), 0);

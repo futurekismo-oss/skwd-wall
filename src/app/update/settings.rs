@@ -48,6 +48,14 @@ pub(super) fn update(app: &mut App, msg: SettingsMsg) -> Task<Message> {
         SettingsMsg::Toggle(path, value) => settings_toggle(app, &path, value),
         SettingsMsg::Commit => settings_commit(app),
         SettingsMsg::Pick(path, value) => settings_pick(app, &path, &value),
+        SettingsMsg::BackgroundPicker(output) => super::settings_background::picker(app, &output),
+        SettingsMsg::BackgroundMode(output, mode) => {
+            super::settings_background::mode(app, &output, &mode)
+        }
+        SettingsMsg::BackgroundColor(output, color) => {
+            super::settings_background::color(app, &output, &color)
+        }
+        SettingsMsg::BackgroundCommit(output) => super::settings_background::commit(app, &output),
         SettingsMsg::SelectSection(section) => select_settings_section(app, section),
         SettingsMsg::LeaveLayoutStudio => select_settings_section(app, 0),
         SettingsMsg::FocusControl(control) => {
@@ -890,10 +898,15 @@ fn activate_settings_control(app: &mut App) -> Task<Message> {
                 .get(choice)
                 .map_or_else(Task::none, |(value, _)| settings_pick(app, &path, value))
         }
-        Control::Chips { path, options, current, disabled } => {
+        Control::Chips { path, options, current, disabled, background } => {
             let Some(choice) = app.panels.settings.focused_choice else {
-                app.panels.settings.focused_choice =
-                    Some(initial_choice(&Control::Chips { path, options, current, disabled }));
+                app.panels.settings.focused_choice = Some(initial_choice(&Control::Chips {
+                    path,
+                    options,
+                    current,
+                    disabled,
+                    background,
+                }));
                 app.retick();
                 return Task::none();
             };
@@ -1125,6 +1138,15 @@ pub(super) fn set_settings_tab(app: &mut App, tab: String) -> Task<Message> {
 }
 
 pub(super) fn settings_pick(app: &mut App, path: &str, value: &str) -> Task<Message> {
+    if path == skwd_config::keys::display::FILL_MODE || path.starts_with("display.fillModes.") {
+        let old = app.config.str_path(path);
+        let old = if old.is_empty() {
+            app.config.str_path(skwd_config::keys::display::FILL_MODE)
+        } else {
+            old
+        };
+        super::settings_background::animate_placement(app, path, &old, value);
+    }
     if path == "playback.addProcess" {
         let _ = process_picker_add(app, value);
         app.daemon.playback.available_processes.clear();
@@ -1178,7 +1200,11 @@ pub(super) fn settings_pick(app: &mut App, path: &str, value: &str) -> Task<Mess
         app.invalidate_swatch();
     }
     app.apply_layout();
+    if path == skwd_config::keys::display::FILL_MODE {
+        let _ = super::settings_background::commit(app, "");
+    }
     settings_pick_side_effects(app, path, value);
+    super::settings_background::sync_monitors(app);
     app.init_settings_inputs();
     app.invalidate_settings();
     app.retick();

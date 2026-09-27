@@ -117,3 +117,8 @@ settings-search-control-presets = förval sparad stil
 settings-search-control-static = status information telemetri
 settings-search-control-code = kod konfiguration
 settings-search-control-preview = förhandsvisning aktuell referens preview current reference
+
+settings-background-label = Bakgrund
+settings-background-color = Färg
+settings-background-blur = Oskärpa
+settings-background-inherit = Använd globalt

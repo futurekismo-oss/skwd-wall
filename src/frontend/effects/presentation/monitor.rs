@@ -37,7 +37,16 @@ impl Effects {
     ) -> Element<'a, Message> {
         let selected = self.displays.selected_outputs.contains(&monitor.target);
         let mut controls = vec![
-            Self::placement_row(monitor, scale, palette),
+            column![
+                Self::placement_row(monitor, scale, palette),
+                monitor.background.view(
+                    monitor.background_reveal,
+                    monitor.background_picker,
+                    scale,
+                    palette
+                )
+            ]
+            .into(),
             Self::lock_row(monitor, scale, palette),
         ];
         if monitor.connected {

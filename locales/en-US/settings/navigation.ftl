@@ -117,3 +117,8 @@ settings-search-control-presets = preset saved style
 settings-search-control-static = status information telemetry
 settings-search-control-code = code configuration
 settings-search-control-preview = preview current reference
+
+settings-background-label = Background
+settings-background-color = Color
+settings-background-blur = Blur
+settings-background-inherit = Use global
