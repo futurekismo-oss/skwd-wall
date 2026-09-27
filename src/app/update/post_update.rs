@@ -10,6 +10,14 @@ pub(super) fn finish(
     sync_settings_preview: bool,
     sync_filter_bar: bool,
 ) -> Task<Message> {
+    if !app.panels.audio_volumes.is_empty()
+        && app.panels.audio.is_none()
+        && app.panels.effects.is_none()
+        && !(app.panels.settings.open && app.panels.settings.tab == "displays")
+    {
+        app.panels.audio_volumes.clear();
+        app.call_tracked("wall.outputs", serde_json::json!({}), Pending::Outputs);
+    }
     if detail_was_open != app.detail_open() {
         app.chrome.bar.cache.clear();
     }

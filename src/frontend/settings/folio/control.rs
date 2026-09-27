@@ -348,6 +348,7 @@ pub(super) fn widget<'a>(
     reveals: Option<&HashMap<String, crate::frontend::animation::Tween>>,
 ) -> Element<'a, Message> {
     match control {
+        Control::Display(control) => control.view(scale, palette),
         Control::AppTheme { app } => {
             label(app.name, crate::frontend::ui::TYPE_SMALL, scale, palette.surface_text).into()
         }

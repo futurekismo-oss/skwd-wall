@@ -30,7 +30,8 @@ fn control_ids(control: &Control) -> Vec<String> {
         Control::Details { rows, .. } | Control::StackBar { rows, .. } => {
             rows.iter().flat_map(|row| control_ids(&row.control)).collect()
         }
-        Control::Segment
+        Control::Display(_)
+        | Control::Segment
         | Control::Static
         | Control::Code { .. }
         | Control::AppTheme { .. }
@@ -178,6 +179,7 @@ fn controls_match_schema() {
                     | Control::Presets { .. }
                     | Control::Details { .. }
                     | Control::StackBar { .. }
+                    | Control::Display(_)
                     | Control::Segment
                     | Control::Static
                     | Control::Code { .. }
@@ -320,6 +322,7 @@ fn controls_emit_valid_values() {
                         | Control::Presets { .. }
                         | Control::Details { .. }
                         | Control::StackBar { .. }
+                        | Control::Display(_)
                         | Control::Segment
                         | Control::Static
                         | Control::Code { .. }

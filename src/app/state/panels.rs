@@ -2,6 +2,7 @@ use super::{SettingsState, TransitionPreviewState};
 
 #[derive(Default)]
 pub(crate) struct PanelsState {
+    pub(crate) audio_volumes: std::collections::HashMap<String, u32>,
     pub(crate) audio_active: bool,
     pub(crate) audio_playing: bool,
     pub(crate) audio: Option<crate::frontend::audio_panel::AudioPanel>,
@@ -13,4 +14,15 @@ pub(crate) struct PanelsState {
     pub(crate) schedule: Option<crate::frontend::schedule_editor::ScheduleEditor>,
     pub(crate) theme_designer: Option<crate::frontend::theme_designer::ThemeDesigner>,
     pub(crate) scene_properties: Option<crate::frontend::scene_properties::SceneProperties>,
+}
+
+impl PanelsState {
+    pub(crate) fn audio_view(&self) -> (bool, bool, bool, bool) {
+        (
+            self.settings.open,
+            self.settings.tab == "displays",
+            self.effects.is_some(),
+            self.audio.is_some(),
+        )
+    }
 }

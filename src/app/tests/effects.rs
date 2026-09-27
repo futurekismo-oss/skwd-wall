@@ -383,3 +383,57 @@ fn saved_palette_refresh_preserves_selection_and_requests_new_preview() {
     assert!(drain_calls(&app).iter().any(|(method, params)| method == "effects.preview"
         && params["effects"][0]["params"]["theme"] == "saved:Nord"));
 }
+
+#[test]
+fn settings_colour_source_uses_connector_without_opening_the_multipicker() {
+    use crate::contracts::daemon::{OutputStatus, OutputsResult};
+    use crate::frontend::effects::EffectsMsg;
+    let mut app = test_app();
+    app.panels.settings.open = true;
+    app.on_outputs(OutputsResult {
+        outputs: vec![
+            OutputStatus {
+                name: "DP-1".into(),
+                target: "@monitor:First @ DP-1".into(),
+                ..Default::default()
+            },
+            OutputStatus {
+                name: "DP-2".into(),
+                target: "@monitor:Second @ DP-2".into(),
+                ..Default::default()
+            },
+            OutputStatus {
+                name: "DP-3".into(),
+                target: "@monitor:Offline @ DP-3".into(),
+                connected: false,
+                ..Default::default()
+            },
+        ],
+    });
+    assert!(app.panels.effects.is_none());
+    assert!(app.panels.audio.is_none());
+    let _ = drain_calls(&app);
+    for (target, expected) in [
+        ("@monitor:First @ DP-1", "DP-1"),
+        ("@monitor:Second @ DP-2", "DP-2"),
+        ("@monitor:Second @ DP-2", ""),
+    ] {
+        let _ = update(&mut app, Message::Effects(EffectsMsg::MonitorTheme(target.into())));
+        assert_eq!(app.config.str_path(skwd_config::keys::display::THEME_OUTPUT), expected);
+        let calls = drain_calls(&app);
+        let rethemes: Vec<_> =
+            calls.iter().filter(|(method, _)| method == "wall.retheme").collect();
+        if expected.is_empty() {
+            assert!(rethemes.is_empty());
+        } else {
+            assert_eq!(rethemes.len(), 1);
+            assert_eq!(rethemes[0].1["output"], expected);
+        }
+    }
+    let _ = update(
+        &mut app,
+        Message::Effects(EffectsMsg::MonitorTheme("@monitor:Offline @ DP-3".into())),
+    );
+    assert_eq!(app.config.str_path(skwd_config::keys::display::THEME_OUTPUT), "");
+    assert!(drain_calls(&app).iter().all(|(method, _)| method != "wall.retheme"));
+}

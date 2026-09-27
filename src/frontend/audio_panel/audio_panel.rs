@@ -29,6 +29,28 @@ pub struct AudioMon {
     pub manual_paused: bool,
 }
 
+impl From<&crate::contracts::daemon::OutputStatus> for AudioMon {
+    fn from(out: &crate::contracts::daemon::OutputStatus) -> Self {
+        Self {
+            label: label_for(&out.kind, &out.path, &out.we_id),
+            source: if out.kind == MediaKind::WallpaperEngine {
+                out.we_id.clone()
+            } else if out.current.is_empty() {
+                out.path.clone()
+            } else {
+                out.current.clone()
+            },
+            name: out.name.clone(),
+            wtype: out.kind.clone(),
+            mute: out.mute,
+            volume: out.volume,
+            shared: out.audio_shared,
+            paused: out.paused,
+            manual_paused: out.manual_paused,
+        }
+    }
+}
+
 impl AudioMon {
     pub fn has_audio_controls(&self) -> bool {
         self.wtype.has_audio_controls()

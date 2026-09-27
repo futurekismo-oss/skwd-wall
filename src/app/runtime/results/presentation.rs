@@ -83,7 +83,39 @@ impl App {
     }
 
     pub(crate) fn on_outputs(&mut self, result: crate::contracts::daemon::OutputsResult) {
-        let outs = result.outputs;
+        let mut outs = result.outputs;
+        self.panels.audio_volumes.retain(|target, _| {
+            outs.iter().any(|out| {
+                out.is_connected()
+                    && out.target() == target
+                    && self.daemon.output_statuses.iter().any(|old| {
+                        old.target() == target
+                            && old.kind == out.kind
+                            && old.current == out.current
+                            && old.path == out.path
+                            && old.we_id == out.we_id
+                    })
+            })
+        });
+        let mut audio: Vec<_> = outs
+            .iter()
+            .filter(|out| out.is_connected())
+            .map(crate::frontend::audio_panel::AudioMon::from)
+            .collect();
+        crate::frontend::audio_panel::align_shared_audio(&mut audio);
+        for out in &mut outs {
+            if out.is_connected()
+                && let Some(mon) = audio.iter().find(|mon| mon.name == out.name)
+            {
+                out.volume = mon.volume;
+                out.mute = mon.mute;
+                out.audio_shared = mon.shared;
+            }
+            if let Some(volume) = self.panels.audio_volumes.get(out.target()) {
+                out.volume = *volume;
+                out.mute = *volume == 0;
+            }
+        }
         self.daemon.output_statuses.clone_from(&outs);
         let mut output_names: Vec<String> = outs
             .iter()
@@ -238,27 +270,14 @@ impl App {
         &mut self,
         result: crate::contracts::daemon::AudioOutputsResult,
     ) {
-        let mut mons: Vec<crate::frontend::audio_panel::AudioMon> = result
-            .outputs
-            .into_iter()
-            .filter(crate::contracts::daemon::OutputStatus::is_connected)
-            .map(|out| crate::frontend::audio_panel::AudioMon {
-                label: crate::frontend::audio_panel::label_for(&out.kind, &out.path, &out.we_id),
-                source: if out.kind == MediaKind::WallpaperEngine {
-                    out.we_id.clone()
-                } else {
-                    out.path.clone()
-                },
-                name: out.name,
-                wtype: out.kind,
-                mute: out.mute,
-                volume: out.volume,
-                shared: out.audio_shared,
-                paused: out.paused,
-                manual_paused: out.manual_paused,
-            })
+        self.on_outputs(crate::contracts::daemon::OutputsResult { outputs: result.outputs });
+        let mut mons: Vec<_> = self
+            .daemon
+            .output_statuses
+            .iter()
+            .filter(|out| out.is_connected())
+            .map(crate::frontend::audio_panel::AudioMon::from)
             .collect();
-        crate::frontend::audio_panel::align_shared_audio(&mut mons);
         if let Some(volume) =
             self.runtime_state.demo.as_ref().and_then(|session| session.audio_demo_volume)
         {

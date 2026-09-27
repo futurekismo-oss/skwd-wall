@@ -146,6 +146,7 @@ fn add_aliases(haystack: &mut String) {
 
 fn control_search_text(control: &Control) -> String {
     match control {
+        Control::Display(control) => format!("{} {}", control.label(), control.summary()),
         Control::Toggle { path, value } => format!(
             "{path} {} {}",
             tr("settings-search-control-toggle"),
@@ -241,6 +242,7 @@ fn control_search_text(control: &Control) -> String {
 
 fn control_value(control: &Control, cfg: &dyn SettingsSource) -> String {
     match control {
+        Control::Display(control) => format!("{} {}", control.label(), control.summary()),
         Control::Toggle { value, .. } => {
             if *value {
                 String::from(tr("settings-control-enabled"))

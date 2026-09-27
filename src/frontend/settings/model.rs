@@ -2,6 +2,7 @@ use super::ActionId;
 
 #[derive(Debug, Clone)]
 pub enum Control {
+    Display(crate::frontend::display_control::DisplayControl),
     AppTheme {
         app: crate::contracts::daemon::AppThemeStatus,
     },

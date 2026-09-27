@@ -12,7 +12,7 @@ use super::hud::thumb_placeholder;
 const PREVIEW_MAX_WIDTH: f32 = 132.0;
 const PREVIEW_MAX_HEIGHT: f32 = 88.0;
 const WIDE_PREVIEW_MAX_WIDTH: f32 = 220.0;
-const WIDE_TILE_MIN_WIDTH: f32 = 960.0;
+const SELECTION_MIN_WIDTH: f32 = 360.0;
 const TILE_SIDE_PADDING: f32 = 10.0;
 const READING_SIDE_PADDING: f32 = 27.0;
 const SELECTION_PADDING: [f32; 2] = [8.0, 10.0];
@@ -24,7 +24,12 @@ pub(super) fn tile_is_wide(viewport: (f32, f32), scale: f32) -> bool {
     let card = panel
         - crate::frontend::ui::FOLIO_INDEX_WIDTH * scale.max(0.9)
         - 2.0 * (READING_SIDE_PADDING + TILE_SIDE_PADDING) * scale;
-    card >= WIDE_TILE_MIN_WIDTH * scale
+    card >= controls_width(scale) + (SELECTION_MIN_WIDTH + 14.0) * scale
+}
+
+fn controls_width(scale: f32) -> f32 {
+    ((ROW_LABEL_WIDTH + 6.0 * (69.0 + 6.0)) * scale)
+        .max(crate::frontend::settings::background::BackgroundControl::choices_width(scale))
 }
 
 impl Effects {
@@ -63,13 +68,14 @@ impl Effects {
                     | crate::domain::library::catalog::WallpaperKind::We
             )
         {
-            controls.push(crate::frontend::audio_panel::playback_control(
-                &monitor.target,
-                monitor.paused,
-                monitor.manual_paused,
-                scale,
-                palette,
-            ));
+            controls.push(
+                crate::frontend::display_control::DisplayControl::Playback {
+                    target: monitor.target.clone(),
+                    paused: monitor.paused,
+                    manual: monitor.manual_paused,
+                }
+                .view(scale, palette),
+            );
         }
         let rows = controls.len();
         let selection = self.selection(monitor, selected, wide.then_some(rows), scale, palette);
@@ -77,7 +83,9 @@ impl Effects {
             .spacing(ROW_SPACING * scale)
             .align_x(crate::frontend::ui::start());
         let body: Element<'a, Message> = if wide {
-            row![selection, stack.width(Length::Shrink)].spacing(14.0 * scale).into()
+            row![selection, stack.width(Length::Fixed(controls_width(scale)))]
+                .spacing(14.0 * scale)
+                .into()
         } else {
             column![selection, stack].spacing(ROW_SPACING * scale).into()
         };
@@ -252,63 +260,13 @@ impl Effects {
         } else {
             (monitor.mute, monitor.volume)
         };
-        let mute_message = if source_preview {
-            Message::Effects(EffectsMsg::SrcMute(!muted))
-        } else {
-            Message::Audio(crate::frontend::audio_panel::AudioMsg::MonMute(
-                monitor.target.clone(),
-                !muted,
-            ))
-        };
-        let volume_output = monitor.target.clone();
-        let release_output = monitor.target.clone();
-        let gauge = crate::frontend::ui::folio_slider(
-            0.0,
-            100.0,
-            f64::from(volume),
-            1.0,
-            move |value| {
-                if source_preview {
-                    Message::Effects(EffectsMsg::SrcVolume(value as u32))
-                } else {
-                    Message::Audio(crate::frontend::audio_panel::AudioMsg::MonVolume(
-                        volume_output.clone(),
-                        value as u32,
-                    ))
-                }
-            },
-            if source_preview {
-                Message::Noop
-            } else {
-                Message::Audio(crate::frontend::audio_panel::AudioMsg::MonVolumeRelease(
-                    release_output,
-                ))
-            },
-            palette,
-        );
-        row![
-            label(tr("effects-audio-label"), 9.0, scale, with_alpha(palette.surface_text, 0.46))
-                .width(Length::Fixed(ROW_LABEL_WIDTH * scale)),
-            crate::frontend::ui::folio_action(
-                if muted { tr("effects-muted") } else { tr("effects-sound") },
-                !muted,
-                Some(mute_message),
-                Length::Fixed(74.0 * scale),
-                scale * 0.9,
-                palette,
-            ),
-            container(gauge).width(Length::Fill).height(Length::Fixed(27.0 * scale)),
-            label(
-                format!("{volume}%"),
-                10.0,
-                scale,
-                if muted { with_alpha(palette.surface_text, 0.42) } else { palette.surface_text },
-            )
-            .width(Length::Fixed(42.0 * scale)),
-        ]
-        .spacing(7.0 * scale)
-        .align_y(Alignment::Center)
-        .into()
+        crate::frontend::display_control::DisplayControl::Audio {
+            target: monitor.target.clone(),
+            muted,
+            volume,
+            source_preview,
+        }
+        .view(scale, palette)
     }
 
     fn theme_row<'a>(
@@ -316,25 +274,11 @@ impl Effects {
         scale: f32,
         palette: &'a Palette,
     ) -> Element<'a, Message> {
-        let (source, use_for) = (tr("effects-colours-source"), tr("effects-colours-use"));
-        let action_scale = scale * 0.9;
-        let width = crate::frontend::ui::folio_action_width(source, action_scale)
-            .max(crate::frontend::ui::folio_action_width(use_for, action_scale));
-        row![
-            label(tr("effects-colours-label"), 9.0, scale, with_alpha(palette.surface_text, 0.46))
-                .width(Length::Fixed(ROW_LABEL_WIDTH * scale)),
-            crate::frontend::ui::folio_action(
-                if monitor.theme_source { source } else { use_for },
-                monitor.theme_source,
-                Some(Message::Effects(EffectsMsg::MonitorTheme(monitor.target.clone()))),
-                Length::Fixed(width),
-                action_scale,
-                palette,
-            ),
-        ]
-        .spacing(6.0 * scale)
-        .align_y(Alignment::Center)
-        .into()
+        crate::frontend::display_control::DisplayControl::Colours {
+            target: monitor.target.clone(),
+            active: monitor.theme_source,
+        }
+        .view(scale, palette)
     }
 
     fn lock_row<'a>(

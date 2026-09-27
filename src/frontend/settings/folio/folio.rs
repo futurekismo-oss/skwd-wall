@@ -1797,6 +1797,9 @@ fn compact_group_field<'a>(
     };
     let (editor, options_height) = match control {
         Control::StackBar { rows, .. } => {
+            let live_height =
+                rows.iter().filter(|row| matches!(row.control, Control::Display(_))).count() as f32
+                    * 48.0;
             let background_height: f32 = rows
                 .iter()
                 .filter_map(|row| {
@@ -1827,7 +1830,7 @@ fn compact_group_field<'a>(
                     focus,
                     motion,
                 ),
-                176.0 + background_height,
+                176.0 + background_height + live_height,
             )
         }
         control => (
@@ -2052,6 +2055,10 @@ fn detail_rows<'a>(
 ) -> Element<'a, Message> {
     let mut content = column![].spacing(15.0 * scale);
     for row in rows {
+        if let Control::Display(control) = row.control {
+            content = content.push(control.view(scale * 0.94, palette));
+            continue;
+        }
         if let Control::Details { id, summary, rows } = row.control {
             let expanded = focus.expanded_details.contains(&id);
             let body = detail_rows(

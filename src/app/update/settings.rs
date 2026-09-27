@@ -846,6 +846,7 @@ fn activate_settings_control(app: &mut App) -> Task<Message> {
         return Task::none();
     };
     match control {
+        Control::Display(control) => super::update_inner(app, control.activate()),
         Control::AppTheme { app: entry } => {
             let index = app
                 .daemon

@@ -2,6 +2,7 @@ pub mod animation;
 pub mod audio_panel;
 pub mod browser;
 pub mod components;
+pub mod display_control;
 pub mod effects;
 pub mod nav;
 pub mod playlists;

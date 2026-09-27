@@ -43,6 +43,19 @@ impl BackgroundControl {
         Self { output: output.to_string(), mode, color, inherited }
     }
 
+    pub fn button_width(scale: f32) -> f32 {
+        let width = crate::frontend::ui::folio_action_width(tr("settings-background-color"), scale)
+            + 28.0 * scale;
+        width
+            .max(92.0 * scale)
+            .max(crate::frontend::ui::folio_action_width(tr("settings-background-blur"), scale))
+            .max(crate::frontend::ui::folio_action_width(tr("settings-background-inherit"), scale))
+    }
+
+    pub fn choices_width(scale: f32) -> f32 {
+        72.0 * scale + 3.0 * Self::button_width(scale) + 30.0 * scale
+    }
+
     pub fn picker_id(&self) -> String {
         format!("background-picker:{}", self.output)
     }
@@ -56,23 +69,36 @@ impl BackgroundControl {
     ) -> Element<'a, Message> {
         let swatch = crate::frontend::theme::parse_hex(&self.color).unwrap_or(Color::BLACK);
         let solid = self.mode != "blur";
+        let width = Self::button_width(scale);
         let color = button(
-            row![
-                container(text(""))
-                    .width(Length::Fixed(20.0 * scale))
-                    .height(Length::Fixed(20.0 * scale))
-                    .style(move |_| crate::frontend::ui::box_style(swatch, palette.outline)),
-                label(tr("settings-background-color"), 11.0, scale, palette.surface_text),
-            ]
-            .spacing(8.0 * scale),
+            container(
+                row![
+                    container(text(""))
+                        .width(Length::Fixed(20.0 * scale))
+                        .height(Length::Fixed(20.0 * scale))
+                        .style(move |_| crate::frontend::ui::box_style(swatch, palette.outline)),
+                    label(
+                        tr("settings-background-color"),
+                        10.0,
+                        scale,
+                        if solid { palette.primary_text } else { palette.surface_text }
+                    ),
+                ]
+                .spacing(8.0 * scale)
+                .align_y(iced::Alignment::Center),
+            )
+            .center(Length::Fill),
         )
-        .padding(7.0 * scale)
+        .width(Length::Fixed(width))
+        .height(Length::Fixed(crate::frontend::ui::FOLIO_BUTTON_HEIGHT * scale.max(1.0)))
+        .padding([0.0, 8.0 * scale])
         .on_press(Message::Settings(SettingsMsg::BackgroundPicker(self.output.clone())))
         .style(move |_, status| {
             crate::frontend::ui::folio_button_style(solid, false, palette, status)
         });
         let mut choices = row![
-            label(tr("settings-background-label"), 11.0, scale, palette.surface_text),
+            label(tr("settings-background-label"), 9.0, scale, palette.surface_text)
+                .width(Length::Fixed(72.0 * scale)),
             color,
             crate::frontend::ui::folio_action(
                 tr("settings-background-blur"),
@@ -81,10 +107,7 @@ impl BackgroundControl {
                     self.output.clone(),
                     String::from("blur")
                 ))),
-                Length::Fixed(crate::frontend::ui::folio_action_width(
-                    tr("settings-background-blur"),
-                    scale
-                )),
+                Length::Fixed(width),
                 scale,
                 palette
             ),
@@ -99,10 +122,7 @@ impl BackgroundControl {
                     self.output.clone(),
                     String::from("inherit"),
                 ))),
-                Length::Fixed(crate::frontend::ui::folio_action_width(
-                    tr("settings-background-inherit"),
-                    scale,
-                )),
+                Length::Fixed(width),
                 scale,
                 palette,
             ));

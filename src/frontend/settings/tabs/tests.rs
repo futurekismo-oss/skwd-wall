@@ -1557,3 +1557,66 @@ fn collection_settings_include_own_controls_and_presets() {
         )
     );
 }
+
+#[test]
+fn current_wallpapers_exposes_live_controls_only_for_connected_media() {
+    use crate::contracts::daemon::OutputStatus;
+    use crate::contracts::media::MediaKind;
+    use crate::frontend::display_control::DisplayControl;
+    let cfg = cfg().with_text(keys::display::THEME_OUTPUT, "DP-1");
+    for (kind, connected, expected) in [
+        (MediaKind::Static, true, 1),
+        (MediaKind::Video, true, 3),
+        (MediaKind::WallpaperEngine, true, 3),
+        (MediaKind::Video, false, 0),
+    ] {
+        let output = OutputStatus {
+            name: "DP-1".into(),
+            target: "@monitor:Panel @ DP-1".into(),
+            connected,
+            kind,
+            mute: true,
+            volume: 37,
+            paused: true,
+            manual_paused: false,
+            ..Default::default()
+        };
+        let cards = build_tab_with_output_statuses(
+            "displays",
+            &cfg,
+            &[],
+            &[],
+            "",
+            &[],
+            &[],
+            &[output],
+            &std::collections::HashMap::default(),
+        );
+        let Control::StackBar { rows, .. } = &cards[0].1[0].control else {
+            panic!("display controls")
+        };
+        assert_eq!(rows.len(), 2 + expected);
+        let live: Vec<_> = rows
+            .iter()
+            .filter_map(|row| {
+                if let Control::Display(control) = &row.control { Some(control) } else { None }
+            })
+            .collect();
+        assert_eq!(live.len(), expected);
+        if connected {
+            assert!(
+                matches!(live[0], DisplayControl::Colours { active: true, target } if target == "@monitor:Panel @ DP-1")
+            );
+        }
+        if expected == 3 {
+            assert!(matches!(
+                live[1],
+                DisplayControl::Audio { muted: true, volume: 37, source_preview: false, .. }
+            ));
+            assert!(matches!(
+                live[2],
+                DisplayControl::Playback { paused: true, manual: false, .. }
+            ));
+        }
+    }
+}

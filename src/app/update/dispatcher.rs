@@ -7,11 +7,16 @@ use super::*;
 
 pub fn update(app: &mut App, message: Message) -> Task<Message> {
     let detail_was_open = app.detail_open();
+    let audio_view = app.panels.audio_view();
     let frame = matches!(&message, Message::Daemon(crate::infrastructure::runtime::Wake::Frame(_)));
     let sync_settings_preview =
         !frame && !matches!(&message, Message::Viewport(..) | Message::MouseMoved(..));
     let sync_filter_bar = !frame && !matches!(&message, Message::MouseMoved(..));
     let task = update_inner(app, message);
+    if audio_view != app.panels.audio_view() && !app.panels.audio_volumes.is_empty() {
+        app.panels.audio_volumes.clear();
+        app.call_tracked("wall.outputs", serde_json::json!({}), Pending::Outputs);
+    }
     post_update::finish(app, task, detail_was_open, sync_settings_preview, sync_filter_bar)
 }
 

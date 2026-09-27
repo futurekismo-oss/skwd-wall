@@ -91,11 +91,12 @@ pub(super) fn update(app: &mut App, msg: EffectsMsg) -> Task<Message> {
         }
         EffectsMsg::MonitorTheme(output) => {
             let Some(connector) = app
-                .panels
-                .effects
-                .as_ref()
-                .and_then(|effects| effects.connector_for_target(&output))
-                .map(str::to_string)
+                .daemon
+                .output_statuses
+                .iter()
+                .find(|status| status.target() == output || status.name == output)
+                .filter(|status| status.is_connected())
+                .map(|status| status.name.clone())
             else {
                 return Task::none();
             };
@@ -255,8 +256,20 @@ pub(super) fn mon_fill(app: &mut App, output: &str, mode: &str) -> Task<Message>
 
 pub(super) fn audio_mon_mute(app: &mut App, output: &str, mute: bool) -> Task<Message> {
     let targets = audio_control_targets(app, output);
+    if targets.is_empty() {
+        return Task::none();
+    }
+    for status in &mut app.daemon.output_statuses {
+        if targets
+            .iter()
+            .any(|target| target == "*" || target == status.target() || target == &status.name)
+        {
+            status.mute = mute;
+        }
+    }
+    let connectors = audio_panel_targets(app, &targets);
     if let Some(panel) = app.panels.audio.as_mut() {
-        for target in &targets {
+        for target in &connectors {
             panel.set_mon_mute(target, mute);
         }
     }
@@ -265,22 +278,7 @@ pub(super) fn audio_mon_mute(app: &mut App, output: &str, mute: bool) -> Task<Me
             eff.set_mon_mute(target, mute);
         }
     }
-    app.panels.audio_playing = app
-        .panels
-        .audio
-        .as_ref()
-        .is_some_and(crate::frontend::audio_panel::AudioPanel::any_playing)
-        || app.panels.effects.as_ref().is_some_and(|effects| {
-            effects.monitors().iter().any(|monitor| {
-                matches!(
-                    monitor.kind,
-                    crate::domain::library::catalog::WallpaperKind::Video
-                        | crate::domain::library::catalog::WallpaperKind::We
-                ) && !monitor.mute
-                    && monitor.volume > 0
-            })
-        });
-    app.chrome.bar.cache.clear();
+    sync_audio_controls(app);
     if output == "*" {
         app.daemon.client.call("wall.set_audio", json!({ "mute": mute }));
     } else {
@@ -293,8 +291,22 @@ pub(super) fn audio_mon_mute(app: &mut App, output: &str, mute: bool) -> Task<Me
 
 pub(super) fn audio_mon_volume(app: &mut App, output: &str, vol: u32) -> Task<Message> {
     let targets = audio_control_targets(app, output);
+    if targets.is_empty() {
+        return Task::none();
+    }
+    for status in &mut app.daemon.output_statuses {
+        if targets
+            .iter()
+            .any(|target| target == "*" || target == status.target() || target == &status.name)
+        {
+            status.volume = vol;
+            status.mute = vol == 0;
+            app.panels.audio_volumes.insert(status.target().to_string(), vol);
+        }
+    }
+    let connectors = audio_panel_targets(app, &targets);
     if let Some(panel) = app.panels.audio.as_mut() {
-        for target in &targets {
+        for target in &connectors {
             panel.set_mon_volume(target, vol);
             panel.set_mon_mute(target, vol == 0);
         }
@@ -305,36 +317,36 @@ pub(super) fn audio_mon_volume(app: &mut App, output: &str, vol: u32) -> Task<Me
             eff.set_mon_mute(target, vol == 0);
         }
     }
-    app.panels.audio_playing = app
-        .panels
-        .audio
-        .as_ref()
-        .is_some_and(crate::frontend::audio_panel::AudioPanel::any_playing)
-        || app.panels.effects.as_ref().is_some_and(|effects| {
-            effects.monitors().iter().any(|monitor| {
-                matches!(
-                    monitor.kind,
-                    crate::domain::library::catalog::WallpaperKind::Video
-                        | crate::domain::library::catalog::WallpaperKind::We
-                ) && !monitor.mute
-                    && monitor.volume > 0
-            })
-        });
-    app.chrome.bar.cache.clear();
+    sync_audio_controls(app);
     Task::none()
 }
 
 pub(super) fn audio_mon_volume_release(app: &mut App, output: &str) -> Task<Message> {
     let targets = audio_control_targets(app, output);
+    if targets.is_empty() {
+        return Task::none();
+    }
     let vol = app
-        .panels
-        .audio
-        .as_ref()
-        .and_then(|panel| panel.mons.iter().find(|mon| mon.name == output).map(|mon| mon.volume))
-        .or_else(|| app.panels.effects.as_ref().and_then(|eff| eff.mon_volume(output)));
+        .daemon
+        .output_statuses
+        .iter()
+        .find(|status| status.target() == output || status.name == output)
+        .map(|status| status.volume)
+        .or_else(|| {
+            app.panels
+                .audio
+                .as_ref()
+                .and_then(|panel| {
+                    panel.mons.iter().find(|mon| mon.name == output).map(|mon| mon.volume)
+                })
+                .or_else(|| app.panels.effects.as_ref().and_then(|eff| eff.mon_volume(output)))
+        });
     let Some(vol) = vol else {
         return Task::none();
     };
+    app.panels
+        .audio_volumes
+        .retain(|target, _| !targets.iter().any(|item| item == "*" || item == target));
     let mute = vol == 0;
     if output == "*" {
         app.daemon.client.call("wall.set_audio", json!({ "volume": vol, "mute": mute }));
@@ -343,8 +355,9 @@ pub(super) fn audio_mon_volume_release(app: &mut App, output: &str) -> Task<Mess
             .client
             .call("wall.set_audio", json!({ "volume": vol, "mute": mute, "outputs": &targets }));
     }
+    let connectors = audio_panel_targets(app, &targets);
     if let Some(panel) = app.panels.audio.as_mut() {
-        for target in &targets {
+        for target in &connectors {
             panel.set_mon_mute(target, mute);
         }
     }
@@ -353,12 +366,52 @@ pub(super) fn audio_mon_volume_release(app: &mut App, output: &str) -> Task<Mess
             eff.set_mon_mute(target, mute);
         }
     }
+    app.call_tracked("wall.outputs", json!({}), Pending::AudioOutputs);
     Task::none()
+}
+
+fn audio_panel_targets(app: &App, targets: &[String]) -> Vec<String> {
+    targets
+        .iter()
+        .map(|target| {
+            app.daemon
+                .output_statuses
+                .iter()
+                .find(|status| status.target() == target)
+                .map_or_else(|| target.clone(), |status| status.name.clone())
+        })
+        .collect()
 }
 
 fn audio_control_targets(app: &App, output: &str) -> Vec<String> {
     if output == "*" {
         return vec![String::from("*")];
+    }
+    if let Some(source) = app
+        .daemon
+        .output_statuses
+        .iter()
+        .find(|status| status.target() == output || status.name == output)
+    {
+        if !source.is_connected() {
+            return Vec::new();
+        }
+        let mut targets: Vec<_> = app
+            .daemon
+            .output_statuses
+            .iter()
+            .filter(|status| {
+                status.is_connected()
+                    && (status.target() == source.target()
+                        || (source.kind.has_audio_controls()
+                            && source.kind == status.kind
+                            && !audio_source(source).is_empty()
+                            && audio_source(source) == audio_source(status)))
+            })
+            .map(|status| status.target().to_string())
+            .collect();
+        targets.sort();
+        return targets;
     }
     app.panels
         .effects
@@ -366,6 +419,43 @@ fn audio_control_targets(app: &App, output: &str) -> Vec<String> {
         .map(|effects| effects.audio_group_outputs(output))
         .or_else(|| app.panels.audio.as_ref().map(|panel| panel.audio_group_outputs(output)))
         .unwrap_or_else(|| vec![output.to_string()])
+}
+
+fn audio_source(status: &crate::contracts::daemon::OutputStatus) -> &str {
+    if status.kind == crate::contracts::media::MediaKind::WallpaperEngine {
+        &status.we_id
+    } else if status.current.is_empty() {
+        &status.path
+    } else {
+        &status.current
+    }
+}
+
+fn sync_audio_controls(app: &mut App) {
+    app.panels.audio_playing = if app.daemon.output_statuses.is_empty() {
+        app.panels.audio.as_ref().is_some_and(crate::frontend::audio_panel::AudioPanel::any_playing)
+            || app.panels.effects.as_ref().is_some_and(|effects| {
+                effects.monitors().iter().any(|monitor| {
+                    matches!(
+                        monitor.kind,
+                        crate::domain::library::catalog::WallpaperKind::Video
+                            | crate::domain::library::catalog::WallpaperKind::We
+                    ) && !monitor.mute
+                        && monitor.volume > 0
+                })
+            })
+    } else {
+        app.daemon.output_statuses.iter().any(|status| {
+            status.is_connected()
+                && status.kind.has_audio_controls()
+                && !status.paused
+                && !status.mute
+                && status.volume > 0
+        })
+    };
+    app.chrome.bar.cache.clear();
+    app.invalidate_settings();
+    app.retick();
 }
 
 pub(super) fn toggle_effects(app: &mut App) -> Task<Message> {

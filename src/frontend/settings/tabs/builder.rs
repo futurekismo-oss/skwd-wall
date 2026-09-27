@@ -195,6 +195,32 @@ fn compose_displays(
             desc: tr("settings-displays-lock-desc").to_string(),
             control: Control::Toggle { value: cfg.flag(&lock_path), path: lock_path },
         };
+        let mut controls = vec![placement, lock];
+        if output.is_connected() {
+            use crate::frontend::display_control::DisplayControl;
+            let mut live = vec![DisplayControl::Colours {
+                target: output.target().to_string(),
+                active: cfg.text(keys::display::THEME_OUTPUT) == output.name,
+            }];
+            if output.kind.has_audio_controls() {
+                live.push(DisplayControl::Audio {
+                    target: output.target().to_string(),
+                    muted: output.mute,
+                    volume: output.volume,
+                    source_preview: false,
+                });
+                live.push(DisplayControl::Playback {
+                    target: output.target().to_string(),
+                    paused: output.paused,
+                    manual: output.manual_paused,
+                });
+            }
+            controls.extend(live.into_iter().map(|control| Row {
+                title: control.label().to_string(),
+                desc: String::new(),
+                control: Control::Display(control),
+            }));
+        }
         rows.push(Row {
             title: output.name.clone(),
             desc: metadata,
@@ -202,7 +228,7 @@ fn compose_displays(
                 id: format!("display:{}", output.target()),
                 summary: current.to_string(),
                 preview: previews.get(&output.name).cloned(),
-                rows: vec![placement, lock],
+                rows: controls,
             },
         });
     }

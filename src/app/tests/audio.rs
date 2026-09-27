@@ -239,3 +239,210 @@ fn open_mixer_keeps_existing_panel() {
     );
     assert!(app.panels.audio.is_some());
 }
+
+#[test]
+fn settings_audio_groups_current_sources_and_commits_without_another_panel() {
+    use crate::contracts::daemon::{OutputStatus, OutputsResult};
+    use crate::contracts::media::MediaKind;
+    use crate::frontend::audio_panel::AudioMsg;
+    for kind in [MediaKind::Video, MediaKind::WallpaperEngine] {
+        let mut app = test_app();
+        app.panels.settings.open = true;
+        app.panels.settings.tab = "displays".into();
+        let status = |name: &str, source: &str, connected| OutputStatus {
+            name: name.into(),
+            target: format!("@monitor:{name}"),
+            kind: kind.clone(),
+            connected,
+            current: source.into(),
+            path: source.into(),
+            we_id: source.into(),
+            volume: 80,
+            mute: false,
+            ..Default::default()
+        };
+        let outputs = vec![
+            status("DP-1", "shared", true),
+            status("DP-2", "shared", true),
+            status("DP-3", "other", true),
+            status("DP-4", "shared", false),
+        ];
+        app.on_outputs(OutputsResult { outputs: outputs.clone() });
+        assert!(app.panels.effects.is_none() && app.panels.audio.is_none());
+        let _ = drain_calls(&app);
+        let _ = update(&mut app, Message::Audio(AudioMsg::MonMute("@monitor:DP-1".into(), true)));
+        let calls = drain_calls(&app);
+        assert!(calls.iter().any(|(method, params)| method == "wall.set_audio"
+            && params["outputs"] == json!(["@monitor:DP-1", "@monitor:DP-2"])
+            && params["mute"] == true));
+        assert!(app.daemon.output_statuses[0].mute && app.daemon.output_statuses[1].mute);
+        assert!(!app.daemon.output_statuses[2].mute && !app.daemon.output_statuses[3].mute);
+        for volume in [0, 37] {
+            let _ = update(
+                &mut app,
+                Message::Audio(AudioMsg::MonVolume("@monitor:DP-1".into(), volume)),
+            );
+            app.on_outputs(OutputsResult { outputs: outputs.clone() });
+            assert_eq!(app.daemon.output_statuses[0].volume, volume);
+            assert_eq!(app.daemon.output_statuses[1].volume, volume);
+            assert_eq!(app.daemon.output_statuses[2].volume, 80);
+            assert_eq!(app.daemon.output_statuses[3].volume, 80);
+            let _ = drain_calls(&app);
+            let _ = update(
+                &mut app,
+                Message::Audio(AudioMsg::MonVolumeRelease("@monitor:DP-1".into())),
+            );
+            let calls = drain_calls(&app);
+            assert!(calls.iter().any(|(method, params)| method == "wall.set_audio"
+                && params["volume"] == volume
+                && params["mute"] == (volume == 0)
+                && params["outputs"] == json!(["@monitor:DP-1", "@monitor:DP-2"])));
+            assert!(app.panels.audio_volumes.is_empty());
+        }
+    }
+}
+
+#[test]
+fn settings_playback_refreshes_effective_and_manual_pause() {
+    use crate::frontend::audio_panel::AudioMsg;
+    let mut app = test_app();
+    app.panels.settings.open = true;
+    let _ = drain_calls(&app);
+    let _ = update(&mut app, Message::Audio(AudioMsg::MonPause("@monitor:Panel".into(), true)));
+    let calls = drain_calls(&app);
+    assert!(calls.iter().any(|(method, params)| method == "wall.set_paused"
+        && params["output"] == "@monitor:Panel"
+        && params["paused"] == true));
+    for manual in [true, false] {
+        app.daemon.pending.insert(991, Pending::AudioOutputs);
+        respond(
+            &mut app,
+            991,
+            json!({"outputs":[{"name":"DP-1","target":"@monitor:Panel","type":"video","paused":true,"manual_paused":manual}]}),
+        );
+        assert!(app.daemon.output_statuses[0].paused);
+        assert_eq!(app.daemon.output_statuses[0].manual_paused, manual);
+    }
+    let _ = drain_calls(&app);
+    app.on_event(wall_proto::ev::PLAYBACK, &json!({}));
+    assert!(drain_calls(&app).iter().any(|(method, _)| method == "wall.outputs"));
+}
+
+#[test]
+fn stable_audio_targets_keep_mixer_and_settings_in_sync_while_dragging() {
+    use crate::contracts::daemon::OutputStatus;
+    use crate::contracts::media::MediaKind;
+    use crate::frontend::audio_panel::{AudioMsg, AudioPanel};
+    let mut app = test_app();
+    app.panels.audio = Some(AudioPanel::default());
+    let outputs = vec![OutputStatus {
+        name: "DP-1".into(),
+        target: "@monitor:Panel".into(),
+        kind: MediaKind::Video,
+        current: "/movie.mp4".into(),
+        path: "/movie.mp4".into(),
+        volume: 70,
+        ..Default::default()
+    }];
+    app.on_outputs(crate::contracts::daemon::OutputsResult { outputs });
+    app.daemon.pending.insert(992, Pending::AudioOutputs);
+    respond(
+        &mut app,
+        992,
+        json!({"outputs":[{"name":"DP-1","target":"@monitor:Panel","type":"video","path":"/movie.mp4","volume":70}]}),
+    );
+    let _ = update(&mut app, Message::Audio(AudioMsg::MonVolume("DP-1".into(), 19)));
+    assert_eq!(app.panels.audio.as_ref().unwrap().mons[0].volume, 19);
+    assert_eq!(app.daemon.output_statuses[0].volume, 19);
+    let _ = update(&mut app, Message::Audio(AudioMsg::MonMute("DP-1".into(), true)));
+    assert!(app.panels.audio.as_ref().unwrap().mons[0].mute);
+    assert!(app.daemon.output_statuses[0].mute);
+}
+
+#[test]
+fn settings_normalizes_linked_audio_and_cancels_abandoned_volume_edits() {
+    use crate::contracts::daemon::{OutputStatus, OutputsResult};
+    use crate::contracts::media::MediaKind;
+    use crate::frontend::audio_panel::AudioMsg;
+    let mut app = test_app();
+    app.panels.settings.open = true;
+    app.panels.settings.tab = "displays".into();
+    let source = |name: &str, mute, volume, connected| OutputStatus {
+        name: name.into(),
+        target: format!("@monitor:{name}"),
+        kind: MediaKind::Video,
+        current: "shared.mp4".into(),
+        mute,
+        volume,
+        connected,
+        ..Default::default()
+    };
+    let outputs = vec![
+        source("DP-1", true, 20, true),
+        source("DP-2", false, 80, true),
+        source("DP-3", true, 5, false),
+    ];
+    app.on_outputs(OutputsResult { outputs: outputs.clone() });
+    assert_eq!(
+        app.daemon.output_statuses.iter().map(|out| (out.mute, out.volume)).collect::<Vec<_>>(),
+        [(false, 80), (false, 80), (true, 5)]
+    );
+    let _ = update(&mut app, Message::Audio(AudioMsg::MonVolume("@monitor:DP-1".into(), 43)));
+    assert!(!app.panels.audio_volumes.is_empty());
+    let _ = update(&mut app, Message::ToggleSettings);
+    assert!(app.panels.audio_volumes.is_empty());
+    app.on_outputs(OutputsResult { outputs });
+    assert_eq!(app.daemon.output_statuses[0].volume, 80);
+}
+
+#[test]
+fn pending_volume_does_not_follow_replaced_wallpaper() {
+    use crate::contracts::daemon::{OutputStatus, OutputsResult};
+    use crate::contracts::media::MediaKind;
+    use crate::frontend::audio_panel::AudioMsg;
+    let mut app = test_app();
+    app.panels.settings.open = true;
+    app.panels.settings.tab = "displays".into();
+    let mut output = OutputStatus {
+        name: "DP-1".into(),
+        target: "@monitor:first".into(),
+        kind: MediaKind::Video,
+        current: "first.mp4".into(),
+        volume: 80,
+        connected: true,
+        ..Default::default()
+    };
+    app.on_outputs(OutputsResult { outputs: vec![output.clone()] });
+    let _ = update(&mut app, Message::Audio(AudioMsg::MonVolume("@monitor:first".into(), 43)));
+    output.current = "replacement.mp4".into();
+    output.volume = 25;
+    app.on_outputs(OutputsResult { outputs: vec![output] });
+    assert!(app.panels.audio_volumes.is_empty());
+    assert_eq!(app.daemon.output_statuses[0].volume, 25);
+}
+
+#[test]
+fn leaving_volume_view_cancels_drag_with_another_panel_retained() {
+    use crate::contracts::daemon::{OutputStatus, OutputsResult};
+    use crate::contracts::media::MediaKind;
+    use crate::frontend::audio_panel::{AudioMsg, AudioPanel};
+    let mut app = test_app();
+    app.panels.settings.open = true;
+    app.panels.settings.tab = "displays".into();
+    app.panels.audio = Some(AudioPanel::new());
+    app.on_outputs(OutputsResult {
+        outputs: vec![OutputStatus {
+            name: "DP-1".into(),
+            kind: MediaKind::Video,
+            current: "first.mp4".into(),
+            volume: 80,
+            connected: true,
+            ..Default::default()
+        }],
+    });
+    let _ = update(&mut app, Message::Audio(AudioMsg::MonVolume("DP-1".into(), 43)));
+    assert!(!app.panels.audio_volumes.is_empty());
+    let _ = update(&mut app, Message::ToggleSettings);
+    assert!(app.panels.audio.is_some());
+    assert!(app.panels.audio_volumes.is_empty());
+}

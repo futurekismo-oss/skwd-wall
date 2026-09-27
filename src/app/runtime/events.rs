@@ -27,7 +27,7 @@ impl App {
                     if self.panels.audio.is_some() {
                         self.call_tracked("wall.outputs", json!({}), Pending::AudioOutputs);
                     }
-                    if self.panels.effects.is_some() {
+                    if self.panels.effects.is_some() || self.panels.settings.open {
                         self.call_tracked("wall.outputs", json!({}), Pending::Outputs);
                     }
                     self.retick();
