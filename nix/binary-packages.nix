@@ -87,3 +87,45 @@ in components // {
 } // pkgs.lib.optionalAttrs release.hasPlasma {
   skwd-paper-plasma = components.plasma;
 }
+ // pkgs.lib.optionalAttrs (release ? steamworks) {
+  skwd-deck-steamworks = pkgs.stdenvNoCC.mkDerivation {
+    pname = "skwd-deck-steamworks";
+    version = release.steamworks.version;
+    src = pkgs.fetchurl { inherit (release.steamworks) url hash; };
+    nativeBuildInputs = with pkgs; [ autoPatchelfHook zstd ];
+    buildInputs = [ pkgs.stdenv.cc.cc.lib ];
+    dontConfigure = true;
+    dontBuild = true;
+    dontStrip = true;
+    unpackPhase = ''
+      runHook preUnpack
+      mkdir package
+      tar -xf "$src" -C package
+      runHook postUnpack
+    '';
+    installPhase = ''
+      runHook preInstall
+      mkdir -p "$out"
+      cp -a package/usr/. "$out/"
+      chmod -R u+w "$out"
+      runHook postInstall
+    '';
+    preFixup = ''
+      patchelf --remove-rpath "$out/lib/skwd-deck/skwd-steam"
+      patchelf --remove-rpath "$out/lib/skwd-deck/libsteam_api.so"
+      addAutoPatchelfSearchPath "$out/lib/skwd-deck"
+    '';
+    doInstallCheck = true;
+    installCheckPhase = ''
+      runHook preInstallCheck
+      test "$("$out/bin/skwd-steam" --version)" = "skwd-steam ${release.steamworks.version}"
+      test -s "$out/share/licenses/skwd-deck-steamworks/third-party/companion/Steamworks.txt"
+      runHook postInstallCheck
+    '';
+    meta = {
+      description = "Optional Steam Client Workshop backend for Skwd Deck";
+      license = pkgs.lib.licenses.unfree;
+      platforms = [ "x86_64-linux" ];
+    };
+  };
+}

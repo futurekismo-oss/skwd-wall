@@ -6,7 +6,11 @@
       forAllSystems = nixpkgs.lib.genAttrs [ "x86_64-linux" ];
     in {
       packages = forAllSystems (system: import ./nix/binary-packages.nix {
-        pkgs = import nixpkgs { inherit system; };
+        pkgs = import nixpkgs {
+          inherit system;
+          # Selecting the separate output opts into the proprietary Steam runtime.
+          config.allowUnfreePredicate = pkg: nixpkgs.lib.getName pkg == "skwd-deck-steamworks";
+        };
         inherit release;
       });
       nixosModules.default = import ./nix/nixos.nix { inherit self release; };
