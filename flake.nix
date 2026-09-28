@@ -17,11 +17,16 @@
         };
         inherit release;
       });
+
       nixosModules.default = import ./nix/nixos.nix { inherit self release; };
+      homeModules.default = import ./nix/hm-module.nix { inherit self release; };
+
       checks = forAllSystems (system: import ./nix/checks.nix {
         pkgs = import nixpkgs { inherit system; };
         packages = self.packages.${system};
         nixosModule = self.nixosModules.default;
+        homeManagerModule = self.homeModules.default;
+        inherit home-manager;
         inherit release;
       });
     };
