@@ -229,3 +229,44 @@
   };
   
 }
+ // pkgs.lib.optionalAttrs (release ? steamworks) {
+  steamworks-install = pkgs.testers.runNixOSTest {
+    name = "skwd-steamworks-install";
+    nodes.machine = { ... }: {
+      imports = [ nixosModule ];
+      services.skwd-deck = {
+        enable = true;
+        extraPackages = [ packages.skwd-deck-steamworks ];
+      };
+      users.users.alice = { isNormalUser = true; uid = 1000; };
+      environment.systemPackages = [ pkgs.python3 ];
+      virtualisation.memorySize = 2048;
+      system.stateVersion = "25.05";
+    };
+    testScript = ''
+      import json
+      import shlex
+
+      def user(command):
+          return "su - alice -c " + shlex.quote("export XDG_RUNTIME_DIR=/run/user/1000; " + command)
+
+      start_all()
+      machine.wait_for_unit("multi-user.target")
+      machine.succeed("loginctl enable-linger alice")
+      machine.wait_for_unit("user@1000.service")
+      machine.fail("test -e ${packages.default}/bin/skwd-steam")
+      machine.succeed(user("skwd-steam --version"))
+      machine.succeed("grep -F ${packages.skwd-deck-steamworks}/bin /etc/systemd/user/skwd-walld.service")
+      machine.succeed(user("systemctl --user start skwd-walld"))
+      machine.wait_until_succeeds(user("test -S /run/user/1000/skwd-wall-v2/wall.sock"))
+      probe = "import json,socket; s=socket.socket(socket.AF_UNIX); s.settimeout(30); s.connect('/run/user/1000/skwd-wall-v2/wall.sock'); s.sendall(json.dumps(dict(id=1,method='steam.search',params={})).encode()+bytes([10])); print(s.makefile().readline())"
+      response = json.loads(machine.succeed(user("python3 -c " + shlex.quote(probe))))
+      message = response["error"]["message"]
+      # No Steam session is present in this VM. Reaching this error proves the
+      # daemon discovered and executed the real helper with its Valve library.
+      assert "Steam is not running, or the account does not own Wallpaper Engine" in message, response
+      assert "needs the optional" not in message, response
+      machine.succeed(user("systemctl --user stop skwd-walld"))
+    '';
+  };
+}
