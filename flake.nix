@@ -19,7 +19,7 @@
       });
 
       nixosModules.default = import ./nix/nixos.nix { inherit self release; };
-      homeModules.default = import ./nix/hm-module.nix { inherit self release; };
+      homeModules.default = import ./nix/hm-module.nix { inherit self; };
 
       checks = forAllSystems (system: import ./nix/checks.nix {
         pkgs = import nixpkgs { inherit system; };
