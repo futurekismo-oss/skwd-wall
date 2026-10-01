@@ -87,6 +87,11 @@ pub(super) fn tab_general(
         keys::general::CLOSE_ON_SELECTION,
     );
     builder.toggle(
+        tr("settings-general-hover-selects-label"),
+        tr("settings-general-hover-selects-desc"),
+        keys::general::HOVER_SELECTS,
+    );
+    builder.toggle(
         tr("settings-general-notify-label"),
         tr("settings-general-notify-desc"),
         keys::general::NOTIFY_ON_WALLPAPER_CHANGE,
@@ -418,6 +423,15 @@ pub(super) fn tab_keybinds(builder: &mut Builder<'_>) {
     let bindings = cfg.bindings();
     for group in crate::contracts::picker::KeyBindingGroup::ALL {
         builder.card(tr(group.title_key()), tr(group.description_key()));
+        if group == crate::contracts::picker::KeyBindingGroup::Navigation {
+            let chips = crate::domain::input::NavKeys::ALL
+                .map(|keys| (ActionId::SetNavKeys(keys), tr(keys.label_key())));
+            builder.action_chips(
+                tr("settings-keybinds-second-keys-label"),
+                tr("settings-keybinds-second-keys-desc"),
+                &chips,
+            );
+        }
         for descriptor in
             crate::contracts::picker::KEY_BINDINGS.into_iter().filter(|entry| entry.group == group)
         {

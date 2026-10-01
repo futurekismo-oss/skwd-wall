@@ -33,6 +33,7 @@ pub enum ActionId {
     ResetMotionStandard,
     ResetMotionSlow,
     ResetKeybinds,
+    SetNavKeys(crate::domain::input::NavKeys),
 }
 
 impl ActionId {
@@ -92,7 +93,7 @@ pub enum SettingsMsg {
     SelectTab(String),
     Key(SettingsKey),
     Run(ActionId),
-    KeybindCapture(String),
+    KeybindCapture(String, usize),
     KeybindCaptureCancel,
     KeybindCaptureApply,
     KeybindCaptureDefault,

@@ -328,7 +328,10 @@ fn compose_picker(
     let mut layout = take_card(&mut selector, tr("settings-selector-layout-card"));
     general_rows.extend(take_rows(
         &mut take_card(&mut general, tr("settings-general-behaviour-card")),
-        &[tr("settings-general-close-on-selection-label")],
+        &[
+            tr("settings-general-close-on-selection-label"),
+            tr("settings-general-hover-selects-label"),
+        ],
     ));
     general_rows.extend(take_rows(&mut layout, &[tr("settings-selector-start-position-label")]));
     section(&mut out, tr("settings-section-general"), "", general_rows);

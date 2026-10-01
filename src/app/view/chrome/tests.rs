@@ -237,16 +237,26 @@ fn optional_filter_controls_persist_and_leave_no_bar_items() {
                             "{path}={visible}, {key}, vertical={vertical}"
                         );
                     }
-                    assert!(
-                        model
-                            .items
-                            .iter()
-                            .any(|item| matches!(item.action, Some(BarAction::Settings)))
-                    );
+                    let settings = model
+                        .items
+                        .iter()
+                        .position(|item| matches!(item.action, Some(BarAction::Settings)))
+                        .expect("settings is always on the bar");
+                    assert!(matches!(
+                        model.items.get(settings + 1).and_then(|item| item.action.as_ref()),
+                        Some(BarAction::Stash)
+                    ));
                 }
             }
             assert_eq!(app.library_session.filters.orient, original_filters.orient);
             assert_eq!(app.library_session.filters.tags, original_filters.tags);
         }
     }
+}
+
+#[test]
+fn filter_bar_eye_stashes() {
+    use crate::app::Message;
+    use crate::frontend::ui::{BarAction, BarIntent};
+    assert!(matches!(bar_intent_message(BarIntent::Activate(BarAction::Stash)), Message::Stash));
 }

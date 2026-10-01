@@ -21,6 +21,10 @@ const CTRL_READ_TIMEOUT: Duration = Duration::from_millis(300);
 #[cfg(target_os = "linux")]
 static DRIVER_RECLAIM_SCHEDULED: std::sync::Once = std::sync::Once::new();
 #[cfg(target_os = "linux")]
+static LAYERSHELL: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+#[cfg(target_os = "linux")]
+const INPUT_EXTENT: i32 = 1 << 15;
+#[cfg(target_os = "linux")]
 pub(super) const NVIDIA_COMPILER_RECLAIM_ADVICE: libc::c_int = libc::MADV_COLD;
 
 pub struct SmallExec(iced::futures::executor::ThreadPool);
@@ -309,6 +313,7 @@ fn run_layershell() -> Result<(), String> {
 
     ensure_layershell_available()?;
     log::info!("shell mode: layershell (warm daemon)");
+    LAYERSHELL.store(true, std::sync::atomic::Ordering::Relaxed);
     iced_layershell::daemon(boot, namespace, app::update, app::view)
         .settings(Settings {
             layer_settings: LayerShellSettings {
@@ -522,6 +527,32 @@ fn run_winit() -> Result<(), String> {
         .executor::<SmallExec>()
         .run()
         .map_err(|err| err.to_string())
+}
+
+pub fn stash_surface(id: iced::window::Id, stashed: bool) -> iced::Task<app::Message> {
+    #[cfg(target_os = "linux")]
+    if LAYERSHELL.load(std::sync::atomic::Ordering::Relaxed) {
+        use iced_layershell::reexport::KeyboardInteractivity;
+        let keyboard_interactivity =
+            if stashed { KeyboardInteractivity::None } else { KeyboardInteractivity::Exclusive };
+        let callback = iced_layershell::actions::ActionCallback::new(move |region| {
+            if !stashed {
+                region.add(0, 0, INPUT_EXTENT, INPUT_EXTENT);
+            }
+        });
+        return iced::Task::batch([
+            iced::Task::done(app::Message::KeyboardInteractivityChange {
+                id,
+                keyboard_interactivity,
+            }),
+            iced::Task::done(app::Message::SetInputRegion { id, callback }),
+        ]);
+    }
+    if stashed {
+        iced::window::minimize(id, true)
+    } else {
+        iced::Task::batch([iced::window::minimize(id, false), iced::window::gain_focus(id)])
+    }
 }
 
 pub fn picker_output(id: iced::window::Id) -> Option<String> {

@@ -426,25 +426,32 @@ pub(super) fn widget<'a>(
             let triggers = crate::domain::input::parse_binding(value)
                 .or_else(|| crate::domain::input::parse_binding(default))
                 .unwrap_or_default();
-            let display = if triggers.is_empty() {
-                tr("settings-keybind-unbound").to_string()
-            } else {
-                crate::domain::input::binding_label(&triggers)
-            };
             let pal = *palette;
-            button(
-                text(display)
-                    .font(crate::frontend::ui::UI_FONT)
-                    .size(13.0 * legible_type_scale(scale))
-                    .color(with_alpha(palette.surface_text, fade)),
-            )
-            .padding([8.0 * scale, 10.0 * scale])
-            .width(Length::Fill)
-            .on_press(Message::Settings(SettingsMsg::KeybindCapture(path)))
-            .style(move |_theme, status| {
-                crate::frontend::ui::folio_button_style(false, false, &pal, status)
-            })
-            .into()
+            let mut slots = row![].spacing(6.0 * scale);
+            for slot in 0..crate::domain::input::SLOTS {
+                let shown = crate::domain::input::slot_triggers(&triggers, slot);
+                let (display, alpha) = if shown.is_empty() {
+                    (tr("settings-keybind-unbound").to_string(), 0.4)
+                } else {
+                    (crate::domain::input::binding_label(shown), 1.0)
+                };
+                let slot_focused = keyboard_focused && focused_choice == Some(slot);
+                slots = slots.push(
+                    button(
+                        text(display)
+                            .font(crate::frontend::ui::UI_FONT)
+                            .size(13.0 * legible_type_scale(scale))
+                            .color(with_alpha(palette.surface_text, alpha * fade)),
+                    )
+                    .padding([8.0 * scale, 10.0 * scale])
+                    .width(Length::Fill)
+                    .on_press(Message::Settings(SettingsMsg::KeybindCapture(path.clone(), slot)))
+                    .style(move |_theme, status| {
+                        crate::frontend::ui::folio_button_style(slot_focused, false, &pal, status)
+                    }),
+                );
+            }
+            slots.into()
         }
         Control::TextField { key, placeholder, .. } => {
             let value = values.get(&key).map_or("", String::as_str);

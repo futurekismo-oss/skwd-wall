@@ -351,7 +351,31 @@ layer-rule {
 }
 ```
 
-Enable **Animate only in Niri overview** to pause the active wallpaper while the overview is closed. Manual, process, and fullscreen pause rules still apply when it opens. The separate `overviewBackdrop` option keeps its existing behaviour.
+Choose **Stationary wallpaper** in the Niri integration to keep one wallpaper behind all
+workspaces and apply blur and dimming only while overview is open. This mode follows the
+current wallpaper and uses the default video renderer. Existing separate-backdrop settings
+are kept when switching modes. Add the layer rule below. Merge the `layout` and `overview`
+settings into your existing blocks; Niri does not accept duplicate blocks.
+
+Images, videos, and Wallpaper Engine scenes have separate blur toggles and radii.
+Image blur is on by default; video and scene blur are off by default. Explicitly
+saved blur settings from older versions are retained for all three types.
+
+```kdl
+layer-rule {
+    match namespace="^skwd-paper-stationary$"
+    place-within-backdrop true
+}
+layout {
+    background-color "transparent"
+}
+overview {
+    workspace-shadow { off; }
+}
+```
+
+
+In separate-backdrop mode, enable **Animate only in Niri overview** to pause the active wallpaper while the overview is closed. Stationary mode ignores this setting and keeps its saved value when you switch back. Manual, process, and fullscreen pause rules still apply when it opens. The separate `overviewBackdrop` option keeps its existing behaviour.
 
 ### KDE Plasma
 <Details>

@@ -17,3 +17,5 @@ settings-language-french = Français
 settings-language-bengali = বাংলা
 settings-language-urdu = اردو
 settings-language-hindi = हिन्दी
+settings-language-persian = فارسی
+settings-language-turkish = Türkçe

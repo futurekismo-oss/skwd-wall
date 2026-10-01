@@ -1,0 +1,10 @@
+settings-position-picker-card-desc = جای این سبک انتخابگر، نوار فیلتر و پنل جستجوی آن را بدون اثر بر سبک‌های دیگر تنظیم کنید.
+settings-position-slices-card = انتخابگر برش‌ها
+settings-position-hex-card = انتخابگر هندسی
+settings-position-wall-card = انتخابگر دیوار
+settings-position-sandy-card = انتخابگر شنی
+settings-position-hand-card = انتخابگر کارت‌های دست
+settings-position-horizontal-label = جابه‌جایی افقی
+settings-position-horizontal-desc = انتخابگر را به‌اندازهٔ درصدی از نصف پهنای صفحه به چپ یا راست ببرید. مقدار مثبت آن را به راست می‌برد.
+settings-position-vertical-label = جابه‌جایی عمودی
+settings-position-vertical-desc = انتخابگر را به‌اندازهٔ درصدی از نصف ارتفاع صفحه بالا یا پایین ببرید. مقدار مثبت آن را پایین می‌برد.

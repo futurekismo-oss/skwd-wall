@@ -1,0 +1,16 @@
+settings-wallpaper-engine-rendering-card = نمایش
+settings-wallpaper-engine-rendering-card-desc = پیش‌فرض‌های نمایش صحنه‌های Workshop با نمایش‌دهندهٔ Vulkan داخلی را تعیین کنید.
+settings-wallpaper-engine-fps-label = سقف FPS
+settings-wallpaper-engine-fps-desc = بیشترین تعداد فریم در ثانیه. مقدار کمتر بار CPU/GPU را کاهش می‌دهد.
+settings-wallpaper-engine-scaling-label = مقیاس‌بندی پیش‌فرض
+settings-wallpaper-engine-scaling-desc = شیوهٔ جا گرفتن صحنه‌های Workshop در هر نمایشگر. پیش‌فرض از حالت پر کردن سراسری پیروی می‌کند.
+settings-wallpaper-engine-scaling-default = پیش‌فرض سراسری
+settings-wallpaper-engine-scaling-fill = پر کردن
+settings-wallpaper-engine-scaling-fit = جا دادن
+settings-wallpaper-engine-scaling-stretch = کشیدن
+settings-wallpaper-engine-scaling-center = وسط‌چین
+settings-wallpaper-engine-scaling-tile = کاشی‌کاری
+settings-wallpaper-engine-scaling-span = گسترده
+settings-wallpaper-engine-effects-card = جلوه‌ها
+settings-wallpaper-engine-particles-label = غیرفعال کردن ذرات
+settings-wallpaper-engine-particles-desc = لایه‌های ذره‌ای صحنه‌هایی که از آن‌ها استفاده می‌کنند رد می‌شوند. این کار می‌تواند بار GPU را کم کند، اما بخشی از پویانمایی آن صحنه‌ها از دست می‌رود.

@@ -1,0 +1,66 @@
+theme-audition-title = پیش‌نمایش رنگ
+theme-audition-subtitle = یک منبع رنگ انتخاب کنید و نمایه‌های آن را با کاغذدیواری یکسان مقایسه کنید.
+theme-audition-backend = منبع رنگ
+theme-audition-backend-on = { $backend } · روشن
+theme-audition-selected = انتخاب‌شده
+theme-audition-preview = پیش‌نمایش
+theme-audition-loading = در حال ساخت پیش‌نمایش از کاغذدیواری فعلی…
+theme-audition-empty = هیچ پیش‌نمایش رنگی دریافت نشد. نصب و کارکرد منبع رنگ انتخاب‌شده را بررسی کنید.
+
+settings-theme-profile-desc = رنگ‌های فعلی را ویرایش کنید و نمایه‌ای برای کاغذدیواری تأمین‌کنندهٔ آن‌ها ذخیره کنید.
+theme-profile-load = بارگذاری رنگ‌های فعلی
+theme-profile-save = ذخیره برای این کاغذدیواری
+theme-profile-enabled = استفاده از این نمایه
+theme-profile-dark = تیره
+theme-profile-light = روشن
+
+settings-playback-pause-title = مکث خودکار
+settings-playback-pause-desc = وقتی هرکدام از شرط‌های فعال برقرار است، کاغذدیواری‌های متحرک را مکث دهید.
+settings-playback-process-enabled = مکث هنگام اجرای برنامه‌ها
+settings-playback-process-desc = تا وقتی پردازشی از فهرست در حال اجرا است، همهٔ نمایشگرها را مکث دهید.
+settings-playback-processes = پردازش‌ها
+settings-playback-choose-process = ویرایش هدف‌های مکث خودکار
+settings-playback-target-dialog-title = هدف‌های مکث خودکار
+settings-playback-target-dialog-desc = پردازش در حال اجرایی اضافه کنید تا هنگام باز بودن آن، کاغذدیواری‌های متحرک مکث شوند. هدف‌هایی را که دیگر نباید باعث مکث شوند حذف کنید.
+settings-playback-targets = هدف‌ها
+settings-playback-targets-empty = هیچ هدف پردازشی تنظیم نشده است.
+settings-playback-running = پردازش‌های در حال اجرا
+settings-playback-running-empty = هیچ پردازش در حال اجرایی گزارش نشد.
+settings-playback-target-add = افزودن
+settings-playback-target-remove = حذف
+settings-playback-target-close = بستن
+settings-playback-target-action-desc = هدف‌های مکث کاغذدیواری را ببینید و یک پردازش در حال اجرا اضافه کنید.
+settings-playback-target-manual-placeholder = نام پردازش، مثلاً mpv
+settings-playback-fullscreen = مکث در حالت تمام‌صفحه
+settings-playback-fullscreen-desc = تا وقتی پنجرهٔ تمام‌صفحه دیده می‌شود، مکث کنید. به پشتیبانی ترکیب‌کننده نیاز دارد.
+settings-playback-scope = نمایشگرهای مکث پنجره
+settings-playback-scope-desc = انتخاب کنید شرط مکث پنجره فقط نمایشگر همان پنجره را مکث دهد یا همهٔ نمایشگرها را.
+settings-playback-all = همهٔ نمایشگرها
+settings-playback-display = نمایشگرِ دارای پنجره
+settings-playback-resume = تأخیر ادامه
+settings-playback-resume-desc = پس از رفع آخرین شرط مکث خودکار صبر کنید. مکث دستی همچنان برقرار می‌ماند.
+settings-playback-detection-off = برای بررسی پشتیبانی ترکیب‌کننده، مکث در حالت تمام‌صفحه یا پنجرهٔ بیشینه را فعال کنید.
+settings-playback-detection-ready = شناسایی وضعیت پنجره در دسترس است
+settings-playback-detection-unavailable = شناسایی وضعیت پنجره در این ترکیب‌کننده در دسترس نیست
+settings-playback-paused-process = مکث: { $names } در حال اجرا است
+settings-playback-paused-fullscreen = مکث: پنجرهٔ تمام‌صفحه
+settings-playback-resuming = در انتظار ادامهٔ پخش
+settings-playback-no-rule = هیچ قانون مکث خودکاری فعال نیست
+
+settings-paper-layer-label = لایهٔ کاغذدیواری
+settings-paper-layer-desc = لایهٔ Wayland برای ویدیوها و صحنه‌ها. با قانون place-within-backdrop در Niri از لایهٔ «پس‌زمینه» استفاده کنید تا کاغذدیواری فعال پشت نمای کلی نمایش داده شود.
+settings-paper-layer-bottom = پایین (پیش‌فرض)
+settings-paper-layer-background = پس‌زمینه
+settings-paper-layer-top = بالا
+settings-paper-layer-overlay = روی‌هم‌نمایی
+settings-paper-overview-only-label = پویانمایی فقط در نمای کلی Niri
+settings-paper-overview-only-desc = به لایهٔ «پس‌زمینه» و place-within-backdrop نیاز دارد. وقتی نمای کلی بسته باشد مکث می‌کند.
+settings-playback-paused-overview = تا زمان بسته بودن نمای کلی Niri مکث شده است
+
+settings-playback-maximized = مکث برای پنجره‌های بیشینه
+settings-playback-maximized-desc = وقتی ترکیب‌کننده پنجره‌ای را بیشینه گزارش کند، مکث کنید. به پشتیبانی ترکیب‌کننده نیاز دارد؛ Niri پنجره‌های فضاهای کاری پنهان را هم گزارش می‌کند.
+settings-playback-paused-maximized = مکث: پنجرهٔ بیشینه
+
+settings-playback-full-width = مکث برای ستون‌های تمام‌عرض (Niri)
+settings-playback-full-width-desc = وقتی ستون کاشی‌شدهٔ فعال دست‌کم ۹۰٪ پهنای نمایشگر را بپوشاند، مکث کنید. Mod+F با فاصله‌های معمول هم شامل می‌شود. فضاهای کاری دیگر حساب نمی‌شوند.
+settings-playback-paused-full-width = مکث: ستون تمام‌عرض

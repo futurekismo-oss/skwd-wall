@@ -51,7 +51,7 @@ impl KeyBindingGroup {
     }
 }
 
-pub const KEY_BINDINGS: [KeyBindingDescriptor; 39] = [
+pub const KEY_BINDINGS: [KeyBindingDescriptor; 46] = [
     KeyBindingDescriptor {
         action: InputAction::Select,
         path: skwd_config::keys::keybind::SELECT,
@@ -62,6 +62,12 @@ pub const KEY_BINDINGS: [KeyBindingDescriptor; 39] = [
         action: InputAction::Apply,
         path: skwd_config::keys::keybind::APPLY,
         title_key: "keybind-apply",
+        group: KeyBindingGroup::Wallpaper,
+    },
+    KeyBindingDescriptor {
+        action: InputAction::RandomApply,
+        path: skwd_config::keys::keybind::RANDOM_APPLY,
+        title_key: "keybind-random-apply",
         group: KeyBindingGroup::Wallpaper,
     },
     KeyBindingDescriptor {
@@ -200,6 +206,42 @@ pub const KEY_BINDINGS: [KeyBindingDescriptor; 39] = [
         action: InputAction::NavDown,
         path: skwd_config::keys::keybind::NAV_DOWN,
         title_key: "keybind-nav-down",
+        group: KeyBindingGroup::Navigation,
+    },
+    KeyBindingDescriptor {
+        action: InputAction::PageBack,
+        path: skwd_config::keys::keybind::PAGE_BACK,
+        title_key: "keybind-page-back",
+        group: KeyBindingGroup::Navigation,
+    },
+    KeyBindingDescriptor {
+        action: InputAction::PageForward,
+        path: skwd_config::keys::keybind::PAGE_FORWARD,
+        title_key: "keybind-page-forward",
+        group: KeyBindingGroup::Navigation,
+    },
+    KeyBindingDescriptor {
+        action: InputAction::JumpFirst,
+        path: skwd_config::keys::keybind::JUMP_FIRST,
+        title_key: "keybind-jump-first",
+        group: KeyBindingGroup::Navigation,
+    },
+    KeyBindingDescriptor {
+        action: InputAction::JumpLast,
+        path: skwd_config::keys::keybind::JUMP_LAST,
+        title_key: "keybind-jump-last",
+        group: KeyBindingGroup::Navigation,
+    },
+    KeyBindingDescriptor {
+        action: InputAction::ModePrev,
+        path: skwd_config::keys::keybind::MODE_PREV,
+        title_key: "keybind-mode-prev",
+        group: KeyBindingGroup::Navigation,
+    },
+    KeyBindingDescriptor {
+        action: InputAction::ModeNext,
+        path: skwd_config::keys::keybind::MODE_NEXT,
+        title_key: "keybind-mode-next",
         group: KeyBindingGroup::Navigation,
     },
     KeyBindingDescriptor {

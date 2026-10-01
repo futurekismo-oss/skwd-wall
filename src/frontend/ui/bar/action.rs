@@ -8,6 +8,7 @@ pub enum BarAction {
     Color(i64),
     FolderToggle,
     Settings,
+    Stash,
     Download,
     Playlists,
     Random,

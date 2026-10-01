@@ -20,7 +20,7 @@ pub(crate) fn view_count() -> u64 {
 }
 
 pub fn view(app: &App, window: iced::window::Id) -> Element<'_, Message> {
-    if app.runtime_state.overlay != Some(window) {
+    if app.runtime_state.overlay != Some(window) || app.runtime_state.stashed {
         return iced::widget::Space::new().into();
     }
     crate::app::warm::note_overlay_drawn();
@@ -28,6 +28,9 @@ pub fn view(app: &App, window: iced::window::Id) -> Element<'_, Message> {
 }
 
 pub fn view_single(app: &App) -> Element<'_, Message> {
+    if app.runtime_state.stashed {
+        return iced::widget::Space::new().into();
+    }
     overlay_view(app)
 }
 

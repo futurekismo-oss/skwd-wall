@@ -120,11 +120,31 @@ fn ui_faces_shape_complex_scripts() {
     use crate::i18n::Script;
     let isolated = shaped_glyphs(Script::Arabic, "ب")[0];
     assert!(!shaped_glyphs(Script::Arabic, "ببب").contains(&isolated));
+    let persian_isolated = shaped_glyphs(Script::Arabic, "پ")[0];
+    assert!(!shaped_glyphs(Script::Arabic, "پپپ").contains(&persian_isolated));
+    assert_eq!(shaped_glyphs(Script::Latin, "ÇçĞğİıÖöŞşÜü").len(), 12);
     let urdu_isolated = shaped_glyphs(Script::Arabic, "ٹ")[0];
     assert!(!shaped_glyphs(Script::Arabic, "ٹٹٹ").contains(&urdu_isolated));
     assert_eq!(shaped_glyphs(Script::Devanagari, "क्ष").len(), 1);
     assert_eq!(shaped_glyphs(Script::Bengali, "ক্ষ").len(), 1);
     assert_eq!(shaped_glyphs(Script::Latin, "Français").len(), 8);
+}
+
+#[test]
+fn ui_faces_shape_persian_and_turkish_language_labels() {
+    use crate::i18n::Script;
+    for script in [
+        Script::Latin,
+        Script::Cyrillic,
+        Script::Simplified,
+        Script::Japanese,
+        Script::Arabic,
+        Script::Bengali,
+        Script::Devanagari,
+    ] {
+        shaped_glyphs(script, "فارسی");
+        assert_eq!(shaped_glyphs(script, "Türkçe").len(), 6);
+    }
 }
 
 #[test]

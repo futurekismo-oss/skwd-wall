@@ -8,12 +8,13 @@ use iced::{
 
 use crate::frontend::animation::{MotionProfile, MotionTier};
 use crate::frontend::theme::Palette;
-use crate::frontend::ui::{UI_FONT, logical_padding, mirror_x, row, with_alpha};
+use crate::frontend::ui::{NERD_FONT, UI_FONT, logical_padding, mirror_x, row, with_alpha};
 
 use super::typography::legible_type_scale;
 
 const BUTTON_FRAME: Duration = Duration::from_millis(16);
 pub const BUTTON_HEIGHT: f32 = 30.0;
+pub const EYE_CLOSED: &str = "\u{eae7}";
 
 pub const FOLIO_INDEX_WIDTH: f32 = 318.0;
 pub const FOLIO_SCRIM_ALPHA: f32 = 0.68;
@@ -526,6 +527,7 @@ impl<Message> canvas::Program<Message> for FolioButtonFill {
 
 fn animated_action<'a, Message: Clone + 'a>(
     label: impl text::IntoFragment<'a>,
+    font: iced::Font,
     active: bool,
     destructive: bool,
     message: Option<Message>,
@@ -544,7 +546,7 @@ fn animated_action<'a, Message: Clone + 'a>(
             .width(Length::Fill)
             .height(Length::Fill)
             .into();
-    let label = container(text(label).font(UI_FONT).size(11.0 * legible_type_scale(scale)))
+    let label = container(text(label).font(font).size(11.0 * legible_type_scale(scale)))
         .width(Length::Fill)
         .height(Length::Fill)
         .align_x(iced::alignment::Horizontal::Center)
@@ -599,7 +601,16 @@ pub fn folio_action<'a, Message: Clone + 'a>(
     scale: f32,
     palette: &'a Palette,
 ) -> Element<'a, Message> {
-    animated_action(label, active, false, message, width, scale, palette)
+    animated_action(label, UI_FONT, active, false, message, width, scale, palette)
+}
+
+pub fn folio_icon_action<'a, Message: Clone + 'a>(
+    glyph: &'a str,
+    message: Message,
+    scale: f32,
+    palette: &'a Palette,
+) -> Element<'a, Message> {
+    animated_action(glyph, NERD_FONT, false, false, Some(message), Length::Shrink, scale, palette)
 }
 
 pub fn folio_destructive_action<'a, Message: Clone + 'a>(
@@ -610,7 +621,7 @@ pub fn folio_destructive_action<'a, Message: Clone + 'a>(
     scale: f32,
     palette: &'a Palette,
 ) -> Element<'a, Message> {
-    animated_action(label, active, true, message, width, scale, palette)
+    animated_action(label, UI_FONT, active, true, message, width, scale, palette)
 }
 
 pub fn folio_masthead<'a, Message: Clone + 'a>(

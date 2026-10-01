@@ -10,6 +10,7 @@ use super::DemoSession;
 pub(crate) struct AppRuntimeState {
     pub(crate) picker_output: Option<String>,
     pub(crate) overlay: Option<iced::window::Id>,
+    pub(crate) stashed: bool,
     pub(crate) toast: Option<(String, Instant)>,
     pub(crate) metrics: Metrics,
     pub(crate) last_animation_tick: Option<Instant>,
@@ -27,6 +28,7 @@ impl AppRuntimeState {
         Self {
             picker_output: None,
             overlay: None,
+            stashed: false,
             toast: None,
             metrics: Metrics::new(),
             last_animation_tick: None,

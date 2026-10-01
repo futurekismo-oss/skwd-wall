@@ -54,10 +54,44 @@ pub(crate) fn exit_picker(app: &mut App) -> ! {
 }
 
 pub(crate) fn toggle(app: &mut App) -> iced::Task<Message> {
+    if app.runtime_state.stashed {
+        return unstash(app);
+    }
     if app.runtime_state.overlay.is_some() {
         exit_picker(app);
     }
     iced::Task::none()
+}
+
+pub(crate) fn toggle_stash(app: &mut App) -> iced::Task<Message> {
+    if app.runtime_state.stashed { unstash(app) } else { stash(app) }
+}
+
+pub(crate) fn stash(app: &mut App) -> iced::Task<Message> {
+    let Some(id) = app.runtime_state.overlay else { return iced::Task::none() };
+    if app.runtime_state.stashed {
+        return iced::Task::none();
+    }
+    app.runtime_state.stashed = true;
+    app.panels.transition_preview.stop();
+    app.scene.release_while_hidden();
+    log::info!("stashed the overlay");
+    crate::shell::stash_surface(id, true)
+}
+
+pub(crate) fn unstash(app: &mut App) -> iced::Task<Message> {
+    let Some(id) = app.runtime_state.overlay else { return iced::Task::none() };
+    if !app.runtime_state.stashed {
+        return iced::Task::none();
+    }
+    app.runtime_state.stashed = false;
+    app.runtime_state.last_tick = None;
+    app.chrome.cache.clear();
+    app.chrome.bar.cache.clear();
+    app.scene.touch();
+    app.retick();
+    log::info!("restored the stashed overlay");
+    crate::shell::stash_surface(id, false)
 }
 
 pub(crate) fn request_hide(app: &App) {

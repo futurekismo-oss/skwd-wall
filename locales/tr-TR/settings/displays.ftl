@@ -1,0 +1,10 @@
+settings-displays-card = Mevcut duvar kâğıtları
+settings-displays-card-desc = Bunlar duvar kâğıdı hizmetinin bildirdiği mevcut duvar kâğıtlarıdır. Buradaki değişiklikler her seferinde tek bir ekrana uygulanır.
+settings-displays-monitor-desc = { $width } × { $height } · { $kind }
+settings-displays-monitor-offline-desc = Çevrimdışı · { $width } × { $height }
+settings-displays-placement-label = Yerleşim
+settings-displays-placement-desc = Duvar kâğıdının doldurulmasını, sığdırılmasını, uzatılmasını, ortalanmasını, döşenmesini veya ekranlara yayılmasını seçin.
+settings-displays-lock-label = Kilitle
+settings-displays-lock-desc = Yalnızca bu monitörün duvar kâğıdını çoklu seçici aracılığıyla güncelleyin.
+settings-displays-empty-label = Ekranlar algılanıyor
+settings-displays-empty-desc = Duvar kâğıdı hizmeti ekranları bildirdiğinde mevcut duvar kâğıtları görünecek.

@@ -255,15 +255,77 @@ fn niri_unified_section() {
 
     let titles: Vec<_> = builder.cards.iter().map(|(card, _)| card.title).collect();
     assert_eq!(titles, ["Niri"]);
-    assert_eq!(builder.cards[0].1.len(), 11);
+    assert_eq!(builder.cards[0].1.len(), 16);
     assert!(matches!(
-        &builder.cards[0].1[4].control,
+        &builder.cards[0].1[5].control,
         Control::Code { snippet } if *snippet == NIRI_SNIPPET
     ));
+    let blur: Vec<_> = builder.cards[0].1[7..13]
+        .iter()
+        .map(|row| match &row.control {
+            Control::Toggle { path, value } => (path.as_str(), Some(*value)),
+            Control::Number { path, .. } => (path.as_str(), None),
+            other => panic!("unexpected blur control {other:?}"),
+        })
+        .collect();
+    assert_eq!(
+        blur,
+        [
+            (keys::niri::BACKDROP_BLUR_STATIC, Some(true)),
+            (keys::niri::BACKDROP_BLUR_STATIC_RADIUS, None),
+            (keys::niri::BACKDROP_BLUR_VIDEO, Some(false)),
+            (keys::niri::BACKDROP_BLUR_VIDEO_RADIUS, None),
+            (keys::niri::BACKDROP_BLUR_WE, Some(false)),
+            (keys::niri::BACKDROP_BLUR_WE_RADIUS, None),
+        ]
+    );
     assert!(matches!(
         &builder.cards[0].1.last().expect("appearance palette").control,
         Control::Dropdown { path, .. } if path == keys::niri::BACKDROP_THEME
     ));
+}
+
+#[test]
+fn niri_stationary_controls_use_current_wallpaper() {
+    let cfg = FakeSettingsSource::default().with_text(keys::niri::OVERVIEW_MODE, "stationary");
+    let mut builder = Builder { cfg: &cfg, cards: Vec::new() };
+    theme_tabs::tab_niri(&mut builder, &[String::from("Catppuccin")]);
+    let rows = &builder.cards[0].1;
+    let paths: Vec<&str> = rows
+        .iter()
+        .filter_map(|row| match &row.control {
+            Control::Dropdown { path, .. }
+            | Control::Toggle { path, .. }
+            | Control::TextField { path, .. }
+            | Control::Number { path, .. } => Some(path.as_str()),
+            _ => None,
+        })
+        .collect();
+    for path in [
+        keys::niri::OVERVIEW_MODE,
+        keys::niri::OVERVIEW_BACKDROP,
+        keys::niri::BACKDROP_BLUR_STATIC,
+        keys::niri::BACKDROP_BLUR_STATIC_RADIUS,
+        keys::niri::BACKDROP_BLUR_VIDEO,
+        keys::niri::BACKDROP_BLUR_VIDEO_RADIUS,
+        keys::niri::BACKDROP_BLUR_WE,
+        keys::niri::BACKDROP_BLUR_WE_RADIUS,
+        keys::niri::BACKDROP_DIM,
+    ] {
+        assert!(paths.contains(&path), "missing {path}");
+    }
+    for path in [
+        keys::niri::BACKDROP,
+        keys::niri::BACKDROP_FOLLOW_WALLPAPER,
+        keys::niri::BACKDROP_AUTO_THEME,
+        keys::niri::BACKDROP_THEME,
+    ] {
+        assert!(!paths.contains(&path), "irrelevant stationary control {path}");
+    }
+    assert!(rows.iter().any(|row| matches!(&row.control,
+        Control::Dropdown { path, options, current, .. }
+        if path == keys::niri::OVERVIEW_MODE && current == "stationary"
+        && options.iter().map(|(value, _)| value.as_str()).collect::<Vec<_>>() == ["separate", "stationary"])));
 }
 
 #[test]
@@ -1261,9 +1323,14 @@ fn performance_lists_detected_devices_and_retains_unavailable_selection() {
 
 #[test]
 fn language_tab_lists_supported_languages_and_system_default() {
-    for (saved, expected) in
-        [("auto", "auto"), ("sv", "sv-SE"), ("es-ES", "es-ES"), ("ja_JP.UTF-8", "ja-JP")]
-    {
+    for (saved, expected) in [
+        ("auto", "auto"),
+        ("sv", "sv-SE"),
+        ("es-ES", "es-ES"),
+        ("ja_JP.UTF-8", "ja-JP"),
+        ("fa_IR.UTF-8", "fa-IR"),
+        ("tr", "tr-TR"),
+    ] {
         let cfg = cfg().with_text(keys::general::LANGUAGE, saved);
         assert!(
             crate::frontend::settings::visible_tabs(&cfg).iter().any(|(id, _)| *id == "language")
@@ -1279,7 +1346,7 @@ fn language_tab_lists_supported_languages_and_system_default() {
             options.iter().map(|(id, _)| id.as_str()).collect::<Vec<_>>(),
             [
                 "auto", "en-US", "sv-SE", "es-ES", "pt-BR", "ru-RU", "zh-CN", "ja-JP", "ar-SA",
-                "fr-FR", "bn-BD", "ur-PK", "hi-IN"
+                "fr-FR", "bn-BD", "ur-PK", "hi-IN", "fa-IR", "tr-TR"
             ]
         );
         assert_eq!(
@@ -1296,7 +1363,9 @@ fn language_tab_lists_supported_languages_and_system_default() {
                 "Français",
                 "বাংলা",
                 "اردو",
-                "हिन्दी"
+                "हिन्दी",
+                "فارسی",
+                "Türkçe"
             ]
         );
     }
@@ -1618,5 +1687,27 @@ fn current_wallpapers_exposes_live_controls_only_for_connected_media() {
                 DisplayControl::Playback { paused: true, manual: false, .. }
             ));
         }
+    }
+}
+
+#[test]
+fn stationary_wallpaper_hides_overview_only_pause_control() {
+    for (mode, enabled, visible) in
+        [("separate", true, true), ("stationary", true, false), ("stationary", false, true)]
+    {
+        let cfg = FakeSettingsSource::default()
+            .with_text(keys::niri::OVERVIEW_MODE, mode)
+            .with_flag(keys::niri::OVERVIEW_BACKDROP, enabled)
+            .with_flag(keys::niri::OVERVIEW_ONLY_PLAYBACK, true);
+        let mut builder = Builder { cfg: &cfg, cards: Vec::new() };
+        media_tabs::tab_paper(&mut builder);
+        let rows: Vec<_> = builder.cards.iter().flat_map(|(_, rows)| rows).collect();
+        assert_eq!(
+            rows.iter().any(|row| matches!(&row.control,
+            Control::Toggle { path, .. } if path == keys::niri::OVERVIEW_ONLY_PLAYBACK)),
+            visible
+        );
+        assert!(rows.iter().any(|row| matches!(&row.control,
+            Control::Toggle { path, .. } if path == keys::playback::FULLSCREEN)));
     }
 }

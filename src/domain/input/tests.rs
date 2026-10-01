@@ -1,7 +1,7 @@
 use super::action::InputScope;
 use super::{
-    ActiveScopes, InputAction, InputMap, KeyId, KeySpec, Mods, MouseButton, MouseSpec, Trigger,
-    binding_config, binding_label, parse_binding,
+    ActiveScopes, InputAction, InputMap, KeyId, KeySpec, Mods, MouseButton, MouseSpec, NavKeys,
+    Trigger, binding_config, binding_label, parse_binding, slot_triggers, with_slot,
 };
 
 const PICKER: ActiveScopes = ActiveScopes { fields: false, search: false, downloads: false };
@@ -52,7 +52,7 @@ fn parser_accepts_triggers() {
 
 #[test]
 fn parser_rejects_invalid() {
-    for invalid in ["", "banana+x", "pp", "shift+", "pageup", "scroll", "click+ctrl"] {
+    for invalid in ["", "banana+x", "pp", "shift+", "insert", "scroll", "click+ctrl"] {
         assert_eq!(Trigger::parse(invalid), None);
     }
 }
@@ -254,4 +254,98 @@ fn scopes_limit_conflicts_and_stealing() {
         holders(&map, InputAction::Playlists, "tab"),
         vec![InputAction::Autocomplete, InputAction::TypeNext]
     );
+}
+
+#[test]
+fn second_nav_keys_and_mode_cycle_defaults() {
+    let map = InputMap::default();
+    let shift = Mods::new(false, false, true);
+    let char_key =
+        |text: &str, mods, scopes| map.lookup_key(&KeyId::Char(text.into()), mods, scopes);
+    for (text, action) in [
+        ("w", InputAction::NavUp),
+        ("a", InputAction::NavLeft),
+        ("s", InputAction::NavDown),
+        ("d", InputAction::NavRight),
+        ("/", InputAction::TagCloud),
+        ("m", InputAction::ModeNext),
+    ] {
+        assert_eq!(char_key(text, Mods::NONE, PICKER), Some(action), "{text}");
+    }
+    assert_eq!(char_key("m", shift, PICKER), Some(InputAction::ModePrev));
+    assert_eq!(char_key("s", shift, PICKER), Some(InputAction::Settings));
+    assert_eq!(char_key("w", shift, PICKER), Some(InputAction::SceneProperties));
+    assert_eq!(char_key("/", shift, PICKER), Some(InputAction::TagCloud));
+    assert_eq!(char_key("m", Mods::NONE, SEARCH), None);
+    assert_eq!(char_key("m", Mods::NONE, DOWNLOADS), None);
+    assert_eq!(map.lookup_key(&KeyId::Left, Mods::NONE, PICKER), Some(InputAction::NavLeft));
+    assert_eq!(map.lookup_key(&KeyId::Down, shift, PICKER), Some(InputAction::TagCloud));
+}
+
+#[test]
+fn slots_split_primary_from_the_rest() {
+    let triggers = parse_binding("left, a, h").expect("valid binding");
+    assert_eq!(slot_triggers(&triggers, 0), &[key("left")]);
+    assert_eq!(slot_triggers(&triggers, 1), &[key("a"), key("h")]);
+    assert!(slot_triggers(&[], 0).is_empty());
+    assert!(slot_triggers(&[], 1).is_empty());
+    assert_eq!(slot_triggers(&triggers[..1], 1), &[] as &[Trigger]);
+}
+
+#[test]
+fn replacing_one_slot_keeps_the_other() {
+    let triggers = parse_binding("left, a").expect("valid binding");
+    assert_eq!(with_slot(&triggers, 1, Some(key("h"))), vec![key("left"), key("h")]);
+    assert_eq!(with_slot(&triggers, 0, Some(key("j"))), vec![key("j"), key("a")]);
+    assert_eq!(with_slot(&triggers, 1, None), vec![key("left")]);
+    assert_eq!(with_slot(&triggers, 0, None), vec![key("a")]);
+    assert_eq!(with_slot(&triggers, 1, Some(key("left"))), vec![key("left")]);
+    assert_eq!(with_slot(&[], 1, Some(key("h"))), vec![key("h")]);
+    let extra = parse_binding("left, a, h").expect("valid binding");
+    assert_eq!(with_slot(&extra, 1, Some(key("k"))), vec![key("left"), key("k")]);
+    assert_eq!(with_slot(&extra, 0, Some(key("up"))), vec![key("up"), key("a"), key("h")]);
+}
+
+#[test]
+fn nav_key_sets_cover_every_direction() {
+    for keys in NavKeys::ALL {
+        let mut actions: Vec<_> = keys.second_keys().map(|(action, _)| action).to_vec();
+        actions.sort_by_key(|action| InputAction::ALL.iter().position(|each| each == action));
+        assert_eq!(
+            actions,
+            [InputAction::NavLeft, InputAction::NavRight, InputAction::NavUp, InputAction::NavDown]
+        );
+        for (action, text) in keys.second_keys() {
+            assert!(Trigger::parse(text).is_some(), "{keys:?} {action:?}");
+        }
+    }
+    let wasd = NavKeys::Wasd.second_keys();
+    let map = InputMap::default();
+    for (action, text) in wasd {
+        assert_eq!(slot_triggers(map.triggers(action), 1), &[key(text)], "{action:?}");
+    }
+}
+
+#[test]
+fn page_and_edge_keys_parse_and_round_trip() {
+    for (text, id, label) in [
+        ("home", KeyId::Home, "Home"),
+        ("end", KeyId::End, "End"),
+        ("pageup", KeyId::PageUp, "Page Up"),
+        ("pagedown", KeyId::PageDown, "Page Down"),
+    ] {
+        let trigger = key(text);
+        assert_eq!(trigger, Trigger::Key(KeySpec { mods: Mods::NONE, id: id.clone() }));
+        assert_eq!(trigger.label(), label);
+        assert_eq!(trigger.config(), text);
+    }
+    let map = InputMap::default();
+    for (id, action) in [
+        (KeyId::Home, InputAction::JumpFirst),
+        (KeyId::End, InputAction::JumpLast),
+        (KeyId::PageUp, InputAction::PageBack),
+        (KeyId::PageDown, InputAction::PageForward),
+    ] {
+        assert_eq!(map.lookup_key(&id, Mods::NONE, PICKER), Some(action));
+    }
 }

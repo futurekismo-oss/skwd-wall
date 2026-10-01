@@ -1,0 +1,10 @@
+settings-position-picker-card-desc = Diğerlerini etkilemeden bu seçici stilini, filtre çubuğunu ve arama panelini konumlandırın.
+settings-position-slices-card = Dilimler seçicisi
+settings-position-hex-card = Geometrik seçici
+settings-position-wall-card = Duvar seçicisi
+settings-position-sandy-card = Sandy seçicisi
+settings-position-hand-card = Kart eli seçicisi
+settings-position-horizontal-label = Yatay kaydırma
+settings-position-horizontal-desc = Seçiciyi ekran genişliğinin yarısının belirli bir yüzdesi kadar sola veya sağa taşıyın. Pozitif değerler sağa taşır.
+settings-position-vertical-label = Dikey kaydırma
+settings-position-vertical-desc = Seçiciyi ekran yüksekliğinin yarısının belirli bir yüzdesi kadar yukarı veya aşağı taşıyın. Pozitif değerler aşağı taşır.

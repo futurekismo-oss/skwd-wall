@@ -26,6 +26,7 @@ pub(crate) fn update_inner(app: &mut App, message: Message) -> Task<Message> {
             super::warm::adopt_first_window(app, id, width, height)
         }
         Message::Daemon(crate::infrastructure::runtime::Wake::Toggle) => super::warm::toggle(app),
+        Message::Stash => super::warm::stash(app),
         Message::Daemon(crate::infrastructure::runtime::Wake::Hide) => {
             super::warm::exit_picker(app)
         }
@@ -39,7 +40,7 @@ pub(crate) fn update_inner(app: &mut App, message: Message) -> Task<Message> {
         }
         Message::Daemon(crate::infrastructure::runtime::Wake::Frame(sent_at)) => {
             let (width, height) = app.scene.viewport;
-            if width > 0.0 && height > 0.0 {
+            if !app.runtime_state.stashed && width > 0.0 && height > 0.0 {
                 let now = Instant::now().max(sent_at);
                 lifecycle::tick(app, now, width, height)
             } else {
@@ -115,6 +116,7 @@ pub(crate) fn update_inner(app: &mut App, message: Message) -> Task<Message> {
         Message::CycleType { backwards } => filters::cycle_type(app, backwards),
         Message::CycleSort { backwards } => filters::cycle_sort(app, backwards),
         Message::ToggleRandomRotate => filters::toggle_random_rotate(app),
+        Message::ApplyRandom => navigation::apply_random(app),
         Message::ToggleFilterBar => filters::toggle_filter_bar(app),
         Message::BarHover(hover, menu_hover) => {
             app.chrome.bar.hover = hover;
@@ -207,6 +209,7 @@ pub(crate) fn update_inner(app: &mut App, message: Message) -> Task<Message> {
         Message::Effects(message) => effects::update(app, message),
         Message::Sched(message) => schedule::update(app, message),
         Message::SetViewMode(mode) => settings::set_view_mode(app, &mode),
+        Message::CycleMode { backwards } => settings::cycle_view_mode(app, backwards),
         Message::Settings(message) => settings::update(app, message),
         Message::SemanticModelImported(result) => settings::semantic_model_imported(app, result),
         Message::SemanticModelDeleted(manifest, selected, result) => {
@@ -223,6 +226,8 @@ pub(crate) fn update_inner(app: &mut App, message: Message) -> Task<Message> {
         Message::DeletePreset(mode, name) => settings::delete_preset(app, &mode, &name),
         Message::KeyUp => navigation::key_up(app),
         Message::KeyDown => navigation::key_down(app),
+        Message::KeyPage { backwards } => navigation::key_page(app, backwards),
+        Message::KeyEdge { last } => navigation::key_edge(app, last),
         Message::Tag(message) => tags::update(app, message),
         Message::ToggleTagMode => tags::toggle_tag_mode(app),
         Message::MassTagInput(text) => tags::mass_tag_input(app, text),

@@ -29,3 +29,5 @@ pub use tabs::build_tab;
 pub(crate) use tabs::build_tab_with_runtime_status;
 
 use builder::Builder;
+
+pub(crate) use tables::NIRI_SNIPPET;

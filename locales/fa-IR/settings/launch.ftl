@@ -1,0 +1,12 @@
+settings-launch-launch-card = راه‌اندازی
+settings-launch-launch-card-desc = انتخابگر در حدود ۱۵۰ میلی‌ثانیه باز می‌شود و با بسته شدن کاملاً پایان می‌یابد. این تنظیمات فقط ظاهر آن را هنگام راه‌اندازی تغییر می‌دهند.
+settings-launch-animation-label = پویانمایی
+settings-launch-animation-desc = «هیچ‌کدام» انتخابگر را به‌محض آماده شدن نشان می‌دهد و سریع‌ترین حالت است. «محو شدن» فقط میزان نمایان بودن را تغییر می‌دهد؛ «بالا آمدن» و «بزرگ‌نمایی» حرکت هم دارند.
+settings-launch-animation-none = هیچ‌کدام
+settings-launch-animation-fade = محو شدن
+settings-launch-animation-rise = بالا آمدن
+settings-launch-animation-zoom = بزرگ‌نمایی
+settings-launch-motion-label = حرکت
+settings-launch-motion-desc = سرعت مشترک رابط انتخابگر. مقدارهای سریع، معمولی و آهسته را در تنظیمات حرکت تغییر دهید.
+settings-launch-fade-from-label = آغاز محوشدن از
+settings-launch-fade-from-desc = میزان کدری در آغاز ورود، به درصد. مقدار ۰ یعنی انتخابگر در ابتدا کاملاً نامرئی است.

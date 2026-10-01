@@ -35,8 +35,8 @@ SHAPED_FACES = [
     (
         "AR",
         "NotoSansArabicUI-Bold.ttf",
-        ["ar-SA", "ur-PK"],
-        ["settings-language-arabic", "settings-language-urdu"],
+        ["ar-SA", "ur-PK", "fa-IR"],
+        ["settings-language-arabic", "settings-language-urdu", "settings-language-persian"],
         [(0x0600, 0x06FF), (0x0750, 0x077F), (0x08A0, 0x08FF), (0x200C, 0x200F)],
     ),
     (

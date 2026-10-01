@@ -129,8 +129,13 @@ fn keybind_capture_view(app: &App) -> Option<settings::KeybindCaptureView> {
     } else {
         crate::domain::input::binding_label(&capture.triggers)
     };
+    let action = crate::i18n::tr(capture.title_key);
     Some(settings::KeybindCaptureView {
-        title: crate::i18n::tr(capture.title_key).to_string(),
+        title: if capture.slot == 0 {
+            action.to_string()
+        } else {
+            crate::i18n::tr_args!("settings-keybind-capture-second-title", action => action)
+        },
         binding,
         edited: capture.edited,
         conflict,

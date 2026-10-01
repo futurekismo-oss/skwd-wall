@@ -11,6 +11,7 @@ pub(crate) struct KeybindCapture {
     pub(crate) path: String,
     pub(crate) action: crate::domain::input::InputAction,
     pub(crate) title_key: &'static str,
+    pub(crate) slot: usize,
     pub(crate) triggers: Vec<Trigger>,
     pub(crate) edited: bool,
 }

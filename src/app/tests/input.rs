@@ -72,7 +72,17 @@ fn key_event_routing() {
         key_message(&km, &keyboard::Key::Character("s".into()), shift, PICKER),
         Some(Message::ToggleSettings)
     ));
-    assert!(key_message(&km, &keyboard::Key::Character("s".into()), none, PICKER).is_none());
+    let char_message = |text: &str, modifiers| {
+        key_message(&km, &keyboard::Key::Character(text.into()), modifiers, PICKER)
+    };
+    assert!(matches!(char_message("w", none), Some(Message::KeyUp)));
+    assert!(matches!(char_message("a", none), Some(Message::KeyPrev)));
+    assert!(matches!(char_message("s", none), Some(Message::KeyDown)));
+    assert!(matches!(char_message("d", none), Some(Message::KeyNext)));
+    assert!(matches!(char_message("/", none), Some(Message::OpenTagCloud)));
+    assert!(matches!(char_message("m", none), Some(Message::CycleMode { backwards: false })));
+    assert!(matches!(char_message("M", shift), Some(Message::CycleMode { backwards: true })));
+    assert!(char_message("h", none).is_none());
     assert!(matches!(
         key_message(&km, &named(Named::ArrowLeft), none, PICKER),
         Some(Message::KeyPrev)
@@ -523,6 +533,28 @@ fn browser_key_nav() {
 }
 
 #[test]
+fn browser_page_and_edge_keys_clamp() {
+    let mut app = test_app();
+    app.scene.viewport = (1280.0, 720.0);
+    let mut browser = Browser::new(Source::Wallhaven);
+    for i in 0..30 {
+        browser.session.items.push(browser_item(&format!("w{i}")));
+    }
+    app.source_browser.browser = Some(browser);
+    let hover = |app: &App| app.source_browser.browser.as_ref().unwrap().session.hover;
+    let _ = update(&mut app, Message::KeyEdge { last: true });
+    assert_eq!(hover(&app), Some(29));
+    let _ = update(&mut app, Message::KeyPage { backwards: false });
+    assert_eq!(hover(&app), Some(29));
+    let _ = update(&mut app, Message::KeyEdge { last: false });
+    assert_eq!(hover(&app), Some(0));
+    let _ = update(&mut app, Message::KeyPage { backwards: true });
+    assert_eq!(hover(&app), Some(0));
+    let _ = update(&mut app, Message::KeyPage { backwards: false });
+    assert!(hover(&app).is_some_and(|index| index > 0));
+}
+
+#[test]
 fn key_flip_favourite() {
     let mut app = test_app();
     seed(&mut app, &[wall("a", "static", 10, 1), wall("b", "static", 20, 2)]);
@@ -745,8 +777,10 @@ fn keybind_capture_popup_flow() {
     use crate::frontend::settings::SettingsMsg;
     let mut app = test_app();
     let _ = update(&mut app, Message::ToggleSettings);
-    let _ =
-        update(&mut app, Message::Settings(SettingsMsg::KeybindCapture("keys.playlists".into())));
+    let _ = update(
+        &mut app,
+        Message::Settings(SettingsMsg::KeybindCapture("keys.playlists".into(), 0)),
+    );
     assert!(app.panels.settings.keybind_capture.is_some());
     let _ = update(
         &mut app,
@@ -774,8 +808,10 @@ fn keybind_capture_popup_flow() {
         ),
         Some(InputAction::Playlists)
     );
-    let _ =
-        update(&mut app, Message::Settings(SettingsMsg::KeybindCapture("keys.playlists".into())));
+    let _ = update(
+        &mut app,
+        Message::Settings(SettingsMsg::KeybindCapture("keys.playlists".into(), 0)),
+    );
     let _ = update(
         &mut app,
         Message::KeyPressed(keyboard::Key::Character("z".into()), keyboard::Modifiers::default()),
@@ -797,8 +833,10 @@ fn keybind_capture_popup_flow() {
         ),
         Some(InputAction::Playlists)
     );
-    let _ =
-        update(&mut app, Message::Settings(SettingsMsg::KeybindCapture("keys.playlists".into())));
+    let _ = update(
+        &mut app,
+        Message::Settings(SettingsMsg::KeybindCapture("keys.playlists".into(), 0)),
+    );
     let _ = update(&mut app, Message::Settings(SettingsMsg::KeybindCaptureDefault));
     assert!(app.panels.settings.keybind_capture.is_none());
     assert_eq!(
@@ -818,7 +856,7 @@ fn keybind_capture_binds_and_resets() {
     let mut app = test_app();
     let _ = update(&mut app, Message::ToggleSettings);
 
-    let _ = update(&mut app, Message::Settings(SettingsMsg::KeybindCapture("keys.flip".into())));
+    let _ = update(&mut app, Message::Settings(SettingsMsg::KeybindCapture("keys.flip".into(), 0)));
     let mods = keyboard::Modifiers::CTRL | keyboard::Modifiers::SHIFT | keyboard::Modifiers::ALT;
     let _ = update(&mut app, Message::KeyPressed(keyboard::Key::Character("D".into()), mods));
     let _ = update(
@@ -838,8 +876,10 @@ fn keybind_capture_binds_and_resets() {
         Some(InputAction::Flip)
     );
 
-    let _ =
-        update(&mut app, Message::Settings(SettingsMsg::KeybindCapture("keys.playlists".into())));
+    let _ = update(
+        &mut app,
+        Message::Settings(SettingsMsg::KeybindCapture("keys.playlists".into(), 0)),
+    );
     let _ = update(&mut app, Message::SetMods(Mods::new(false, true, false)));
     let _ =
         update(&mut app, Message::Settings(SettingsMsg::KeybindCaptureClick(MouseButton::Middle)));
@@ -853,7 +893,8 @@ fn keybind_capture_binds_and_resets() {
         Some(InputAction::Playlists)
     );
 
-    let _ = update(&mut app, Message::Settings(SettingsMsg::KeybindCapture("keys.select".into())));
+    let _ =
+        update(&mut app, Message::Settings(SettingsMsg::KeybindCapture("keys.select".into(), 0)));
     let _ = update(&mut app, Message::Settings(SettingsMsg::KeybindCaptureUnbind));
     let _ = update(&mut app, Message::Settings(SettingsMsg::KeybindCaptureApply));
     assert_eq!(app.config.str_path("keys.select"), "none");
@@ -890,7 +931,7 @@ fn capture_steals_trigger() {
     let mut app = test_app();
     let _ = update(&mut app, Message::ToggleSettings);
     let _ =
-        update(&mut app, Message::Settings(SettingsMsg::KeybindCapture("keys.settings".into())));
+        update(&mut app, Message::Settings(SettingsMsg::KeybindCapture("keys.settings".into(), 0)));
     let _ = update(
         &mut app,
         Message::KeyPressed(keyboard::Key::Character("p".into()), keyboard::Modifiers::default()),
@@ -1111,7 +1152,8 @@ fn choose_displays_shortcut_can_be_rebound_and_reset() {
     let mut app = test_app();
     seed(&mut app, &[wall("wallpaper", "static", 1, 0)]);
     let _ = update(&mut app, Message::ToggleSettings);
-    let _ = update(&mut app, Message::Settings(SettingsMsg::KeybindCapture("keys.effects".into())));
+    let _ =
+        update(&mut app, Message::Settings(SettingsMsg::KeybindCapture("keys.effects".into(), 0)));
     assert_eq!(app.panels.settings.keybind_capture.as_ref().unwrap().title_key, "keybind-effects");
     let _ = update(
         &mut app,
@@ -1145,7 +1187,8 @@ fn choose_displays_shortcut_can_be_rebound_and_reset() {
     );
     app.panels.effects = None;
     let _ = update(&mut app, Message::ToggleSettings);
-    let _ = update(&mut app, Message::Settings(SettingsMsg::KeybindCapture("keys.effects".into())));
+    let _ =
+        update(&mut app, Message::Settings(SettingsMsg::KeybindCapture("keys.effects".into(), 0)));
     let _ = update(&mut app, Message::SetMods(Mods::new(false, true, false)));
     let _ =
         update(&mut app, Message::Settings(SettingsMsg::KeybindCaptureClick(MouseButton::Middle)));
@@ -1158,7 +1201,8 @@ fn choose_displays_shortcut_can_be_rebound_and_reset() {
         ),
         Some(InputAction::Effects)
     );
-    let _ = update(&mut app, Message::Settings(SettingsMsg::KeybindCapture("keys.effects".into())));
+    let _ =
+        update(&mut app, Message::Settings(SettingsMsg::KeybindCapture("keys.effects".into(), 0)));
     let _ = update(&mut app, Message::Settings(SettingsMsg::KeybindCaptureDefault));
     assert_eq!(
         app.input.bindings.lookup_mouse(
@@ -1373,6 +1417,36 @@ fn depth_click_applies_the_visible_card_without_waiting_for_navigation() {
             assert_eq!(applies[0].1["path"], json!(expected.path));
             assert_eq!(app.scene.current, idx);
             assert_eq!(app.scene.camera_pos(), camera);
+        }
+    }
+}
+
+#[test]
+fn hover_selection_can_be_turned_off() {
+    for (mode, turned_off) in [("slices", true), ("hex", true), ("slices", false)] {
+        let mut app = test_app();
+        let walls: Vec<Value> =
+            (0..20).map(|i| wall(&format!("w{i}"), "static", (i * 9) as i64, i as i64)).collect();
+        seed(&mut app, &walls);
+        let _ = update(&mut app, Message::SetViewMode(mode.into()));
+        let mut now = std::time::Instant::now();
+        tick_frames(&mut app, &mut now, 30);
+        app.config.save_key(skwd_config::keys::general::HOVER_SELECTS, json!(!turned_off));
+        let target = app
+            .scene
+            .render
+            .hits
+            .iter()
+            .find(|hit| hit.index != app.scene.current)
+            .copied()
+            .expect("another card is visible");
+        let _ = update(&mut app, Message::MouseMoved(1.0, 1.0));
+        let _ = update(&mut app, Message::MouseMoved(target.cx, target.cy));
+        if turned_off {
+            assert_eq!(app.scene.current, 0, "{mode}: hover leaves the selection alone");
+            assert_eq!(app.scene.hover, Some(target.index), "{mode}: hover still highlights");
+        } else {
+            assert_eq!(app.scene.current, target.index, "{mode}: hover selects by default");
         }
     }
 }

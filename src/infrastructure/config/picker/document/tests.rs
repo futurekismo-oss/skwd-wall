@@ -135,6 +135,32 @@ fn global_apply_button_migrates_without_overwriting_source_choices() {
 }
 
 #[test]
+fn legacy_backdrop_blur_splits_into_each_wallpaper_type_on_load_and_save() {
+    use skwd_config::keys::niri;
+    let dir = tempfile::tempdir().unwrap();
+    let mut config = Config::from_data(json!({"niri": {
+        "overviewBackdropBlurEnabled": false,
+        "overviewBackdropBlur": 45
+    }}));
+    config.config_path = dir.path().join("config.json");
+    for (toggle, radius) in [
+        (niri::BACKDROP_BLUR_STATIC, niri::BACKDROP_BLUR_STATIC_RADIUS),
+        (niri::BACKDROP_BLUR_VIDEO, niri::BACKDROP_BLUR_VIDEO_RADIUS),
+        (niri::BACKDROP_BLUR_WE, niri::BACKDROP_BLUR_WE_RADIUS),
+    ] {
+        assert!(!config.flag_default_config(toggle));
+        assert_eq!(config.num_path(radius), 45.0);
+    }
+    config.persist();
+    let saved: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(&config.config_path).unwrap()).unwrap();
+    assert!(saved["niri"].get("overviewBackdropBlurEnabled").is_none());
+    assert!(saved["niri"].get("overviewBackdropBlur").is_none());
+    assert_eq!(saved["niri"]["backdropBlurWe"], false);
+    assert_eq!(saved["niri"]["backdropBlurVideoRadius"], 45);
+}
+
+#[test]
 fn save_key_keeps_symlink() {
     let dir = tempfile::tempdir().unwrap();
     let dots = dir.path().join("dots");

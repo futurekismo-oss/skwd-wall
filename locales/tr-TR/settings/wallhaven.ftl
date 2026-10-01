@@ -1,0 +1,17 @@
+settings-wallhaven-grid-card = Izgara
+settings-wallhaven-columns-label = Sütunlar
+settings-wallhaven-columns-desc = Her satırdaki küçük resim sayısı.
+settings-wallhaven-rows-label = Satırlar
+settings-wallhaven-rows-desc = Aynı anda görünen satır sayısı.
+settings-wallhaven-thumb-card = Küçük resim
+settings-wallhaven-width-label = Genişlik
+settings-wallhaven-width-desc = Piksel cinsinden küçük resim genişliği.
+settings-wallhaven-height-label = Yükseklik
+settings-wallhaven-height-desc = Piksel cinsinden küçük resim yüksekliği.
+settings-wallhaven-api-card = API
+settings-wallhaven-api-key-label = API anahtarı
+settings-wallhaven-api-key-desc = Hesap özelliklerine ve NSFW sonuçlarına erişmek için bir Wallhaven API anahtarı girin.
+settings-wallhaven-api-key-placeholder = Wallhaven API anahtarı (NSFW için)
+settings-wallhaven-username-label = Kullanıcı adı
+settings-wallhaven-username-desc = Koleksiyonlarınıza göz atmak ve onlardan indirmek için Wallhaven kullanıcı adınızı girin.
+settings-wallhaven-username-placeholder = Wallhaven kullanıcı adı

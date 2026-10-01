@@ -1,0 +1,9 @@
+help-shortcuts = Kısayollar
+help-keyboard = Klavye
+help-mouse = Fare
+help-key-esc = Esc
+help-mouse-wheel = Tekerlek
+help-mouse-hover = Üzerine gel
+help-close-back-quit = Kapat / geri / çık
+help-wheel = Göz at / kaydır
+help-hover = Videoları önizle

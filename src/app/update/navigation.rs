@@ -84,6 +84,86 @@ pub(super) fn key_next(app: &mut App) -> Task<Message> {
     Task::none()
 }
 
+fn page_step(scene: &crate::app::scene::SceneCore) -> usize {
+    let stride = match scene.mode {
+        Mode::Grid => scene.gp.cols.max(1),
+        Mode::Hex => scene.hp.rows.max(1),
+        _ => 1,
+    };
+    (scene.render.hits.len() / stride).max(1) * stride
+}
+
+pub(super) fn key_page(app: &mut App, backwards: bool) -> Task<Message> {
+    if app.source_browser.browser.is_some() {
+        let step = page_step(&app.source_browser.wall.scene) as i64;
+        return browser_seek(app, if backwards { -step } else { step });
+    }
+    let step = page_step(&app.scene);
+    let current = app.scene.current;
+    seek(app, if backwards { current.saturating_sub(step) } else { current + step })
+}
+
+pub(super) fn key_edge(app: &mut App, last: bool) -> Task<Message> {
+    if let Some(browser) = app.source_browser.browser.as_ref() {
+        let count = browser.session.items.len() as i64;
+        return browser_seek(app, if last { count } else { -count });
+    }
+    seek(app, if last { usize::MAX } else { 0 })
+}
+
+fn browser_seek(app: &mut App, delta: i64) -> Task<Message> {
+    let Some(session) = app.source_browser.browser.as_ref().map(|browser| &browser.session) else {
+        return Task::none();
+    };
+    if session.preview.is_some() || session.items.is_empty() {
+        return Task::none();
+    }
+    let last = session.items.len() as i64 - 1;
+    let current = app.source_browser.wall.scene.hover.unwrap_or(0) as i64;
+    browser_select(app, (current + delta).clamp(0, last) as usize)
+}
+
+fn seek(app: &mut App, target: usize) -> Task<Message> {
+    if app.panels.effects.is_some()
+        || (!hand_nav_closes_flip(app) && (app.menu_capturing() || app.detail_open()))
+    {
+        return Task::none();
+    }
+    let count = app.library_session.filtered.len();
+    if count == 0 {
+        return Task::none();
+    }
+    app.scene.kb_nav = true;
+    app.scene.set_current(target.min(count - 1), count);
+    app.retick();
+    Task::none()
+}
+
+pub(super) fn random_other(count: usize, current: usize, seed: u64) -> usize {
+    if count < 2 {
+        return 0;
+    }
+    let pick = (seed % (count as u64 - 1)) as usize;
+    if pick >= current { pick + 1 } else { pick }
+}
+
+pub(super) fn apply_random(app: &mut App) -> Task<Message> {
+    use std::hash::BuildHasher;
+    if app.menu_capturing() || app.detail_open() {
+        return Task::none();
+    }
+    let count = app.library_session.filtered.len();
+    if count == 0 {
+        return Task::none();
+    }
+    let seed = std::collections::hash_map::RandomState::new().hash_one(std::time::Instant::now());
+    let target = random_other(count, app.scene.current, seed);
+    app.scene.kb_nav = true;
+    app.scene.set_current(target, count);
+    app.retick();
+    apply_task(app, target)
+}
+
 pub(super) fn apply_current(app: &mut App) -> Task<Message> {
     if app.source_browser.browser.is_some() {
         return browser_apply_current(app);

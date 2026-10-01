@@ -1,0 +1,15 @@
+settings-schedule-schedule-card = زمان‌بندی
+settings-schedule-schedule-card-desc = قانون‌ها بر پایهٔ شرایطی مانند زمان، روز هفته، آب‌وهوا، برق و نمایشگرها کاغذدیواری و پوسته را انتخاب می‌کنند. نخستین قانون مطابق اجرا می‌شود.
+settings-schedule-enable-label = فعال کردن زمان‌بندی
+settings-schedule-enable-desc = همهٔ قانون‌های زمان‌بندی را بدون حذفشان روشن یا خاموش کنید.
+settings-schedule-apply-on-start-label = اعمال هنگام راه‌اندازی
+settings-schedule-apply-on-start-desc = هنگام شروع سرویس، نخستین قانون مطابق را اعمال کنید. کاغذدیواری‌ای که در این نشست دستی انتخاب شده باشد همچنان اولویت دارد.
+settings-schedule-editor-label = ویرایشگر زمان‌بندی
+settings-schedule-editor-desc = قانون‌ها را با بلوک‌های شرط بسازید و برای تعیین اولویت جابه‌جا کنید؛ نخستین قانون مطابق اجرا می‌شود. تنظیمات قدیمی روز و شب در نخستین باز شدن به دو قانون تبدیل می‌شوند.
+settings-schedule-editor-action = باز کردن
+settings-schedule-location-card = موقعیت مکانی
+settings-schedule-location-card-desc = برای زمان طلوع و غروب و شرایط آب‌وهوا استفاده می‌شود.
+settings-schedule-latitude-label = عرض جغرافیایی
+settings-schedule-latitude-desc = درجهٔ اعشاری؛ شمال مثبت است (مثلاً 59.33).
+settings-schedule-longitude-label = طول جغرافیایی
+settings-schedule-longitude-desc = درجهٔ اعشاری؛ شرق مثبت است (مثلاً 18.06).

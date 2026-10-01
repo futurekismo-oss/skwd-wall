@@ -233,6 +233,7 @@ pub(crate) fn ui_state_json(app: &App) -> String {
             "search_results": app.panels.settings.search_results.len(),
         },
     });
+    state["stashed"] = json!(app.runtime_state.stashed);
     state["playlist_filter"] = app.library_session.playlist_filter.as_ref().map_or(
         serde_json::Value::Null,
         |(id, name, keys)| json!({"id": id, "name": name, "count": keys.len()}),
@@ -254,8 +255,9 @@ pub(super) fn run_ui_command(app: &mut App, cmd: &str) -> Task<Message> {
     let arg = cmd[verb.len()..].trim().to_string();
     match verb {
         "toggle" => crate::app::warm::toggle(app),
-        "show" => Task::none(),
+        "show" => crate::app::warm::unstash(app),
         "hide" => crate::app::warm::exit_picker(app),
+        "stash" => crate::app::warm::toggle_stash(app),
         "demo" => match arg.as_str() {
             "begin" => demo_begin(app),
             "end" => demo_end(app),
@@ -448,7 +450,7 @@ pub(super) fn run_ui_command(app: &mut App, cmd: &str) -> Task<Message> {
             let resolution = if matches!(arg.as_str(), "any" | "") { String::new() } else { arg };
             super::update_inner(app, Message::SetResolution(resolution))
         }
-        "open" => ui_open(app, &arg),
+        "open" => Task::batch([crate::app::warm::unstash(app), ui_open(app, &arg)]),
         "display" => ui_display(app, &arg),
         "playlist" => arg.parse::<i64>().map_or_else(
             |_| {

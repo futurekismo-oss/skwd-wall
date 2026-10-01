@@ -14,11 +14,11 @@ pub use dir::{end_for, logical_padding_for, ordered};
 pub use fade_frame::FadeFrame;
 pub use feedback::Spinner;
 pub use folio::{
-    BUTTON_HEIGHT as FOLIO_BUTTON_HEIGHT, FOLIO_INDEX_WIDTH, folio_action, folio_action_bar,
-    folio_action_width, folio_action_width_in, folio_action_wrap, folio_destructive_action,
-    folio_details, folio_field, folio_ghost_field, folio_index_shell, folio_index_shell_tinted,
-    folio_inline_bar, folio_masthead, folio_scrim_style, folio_sheet, folio_sheet_panel_style,
-    folio_stack_bar,
+    BUTTON_HEIGHT as FOLIO_BUTTON_HEIGHT, EYE_CLOSED, FOLIO_INDEX_WIDTH, folio_action,
+    folio_action_bar, folio_action_width, folio_action_width_in, folio_action_wrap,
+    folio_destructive_action, folio_details, folio_field, folio_ghost_field, folio_icon_action,
+    folio_index_shell, folio_index_shell_tinted, folio_inline_bar, folio_masthead,
+    folio_scrim_style, folio_sheet, folio_sheet_panel_style, folio_stack_bar,
 };
 pub(crate) use folio::{folio_diagonal_edges, folio_diagonal_wipe};
 pub use layout::{

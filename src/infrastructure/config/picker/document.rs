@@ -36,6 +36,7 @@ impl Config {
         display_mode: text_setting(skwd_config::schema::setting::selector::DISPLAY_MODE);
         filter_bar_always_visible: bool_setting(skwd_config::schema::setting::general::FILTER_BAR_ALWAYS_VISIBLE);
         filter_bar_sticky: bool_setting(skwd_config::schema::setting::filter_bar::STICKY);
+        hover_selects: bool_setting(skwd_config::schema::setting::general::HOVER_SELECTS);
         hex_arc: on_unless_off(skwd_config::keys::selector::HEX_ARC);
         last_filter_favourites: off_unless_on(skwd_config::keys::filter_bar::LAST_FAVOURITES_ONLY);
         last_filter_show_hidden_folders: bool_setting(skwd_config::schema::setting::filter_bar::LAST_SHOW_HIDDEN_FOLDERS);
@@ -474,6 +475,7 @@ fn canonicalize_picker_config(data: &mut Value) {
     skwd_config::canonicalize_depth_layout(data);
     skwd_config::canonicalize_paper_engine(data);
     skwd_config::canonicalize_we_renderer(data);
+    skwd_config::canonicalize_backdrop_blur(data);
     canonicalize_resolution_presets(data);
     canonicalize_browser_apply_button(data);
 }

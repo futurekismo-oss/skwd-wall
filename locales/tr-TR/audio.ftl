@@ -1,0 +1,49 @@
+audio-masthead = Ses / mikser
+audio-index-title = Ses
+audio-index-desc = Duvar kâğıtlarını ekranlara göre duraklatın. Aynı kaynağı gösteren ekranlar ses düzeyi ve sessize alma ayarlarını paylaşır.
+audio-detecting-outputs = Çıkışlar algılanıyor
+audio-state-sound = Ses
+audio-state-muted = Sessiz
+audio-state-none = Ses yok
+audio-shared-outputs = Paylaşılan çıkışlar
+audio-live-mix = Mevcut ses
+audio-live-mix-summary = { $audible } çalıyor · { $available } sesli
+audio-kind-video = Video duvar kâğıdı
+audio-kind-we = Wallpaper Engine sahnesi
+audio-kind-static = Sabit duvar kâğıdı
+audio-kind-none = Duvar kâğıdı kaynağı yok
+audio-row-sound = ◆ Ses
+audio-row-muted = ◇ Sessiz
+audio-row-none = - Ses yok
+audio-linked-source = Bağlı kaynak
+audio-independent-source = Bağımsız kaynak
+audio-channel-label = Ses
+audio-no-channel = Bu duvar kâğıdı bir ses kanalı sunmuyor.
+audio-outputs-kicker = Ses / ekranlar
+audio-mixer-heading = Duvar kâğıdı mikseri
+audio-mixer-desc = Her ekranı bağımsız olarak duraklatın. Paylaşılan duvar kâğıtlarında ses düzeyi ve sessize alma ayarları bağlı kalır.
+audio-outputs-summary =
+    { $total } { $total ->
+        [one] çıkış
+       *[other] çıkış
+    } · { $available } sesli · { $sounding } çalıyor
+audio-output-channels = Çıkış kanalları
+audio-output-channels-desc = Sessize alınmış kanallar koyu kalır. Aynı kaynağı gösteren ekranlar ses düzeyi ve sessize alma ayarlarını paylaşır.
+audio-looking-displays = Ekranlar aranıyor
+audio-looking-displays-desc = Duvar kâğıdı hizmeti ekranlarını bildirdiğinde ses kontrolleri görünecektir.
+audio-live-state = Mevcut durum
+audio-live-none = Şu anda duvar kâğıdı sesi çalmıyor.
+audio-live-playing = Vurgulanan kanallar ses çalıyor.
+audio-close-mixer = Mikseri kapat
+audio-source-video = Video
+audio-source-wallpaper-engine = Wallpaper Engine
+audio-source-we-id = Wallpaper Engine ({ $id })
+audio-source-static-image = Sabit görüntü
+audio-wallpaper-label = Duvar kâğıdı
+audio-pause-wallpaper = Duvar kâğıdını duraklat
+audio-resume-wallpaper = Duvar kâğıdını sürdür
+audio-wallpaper-paused = Elle duraklatıldı
+audio-wallpaper-held = Başka bir kural tarafından duraklatıldı
+audio-wallpaper-playing = Oynatılıyor
+audio-state-paused = Duraklatıldı
+audio-playback-error = Duvar kâğıdı oynatması değiştirilemedi: { $error }

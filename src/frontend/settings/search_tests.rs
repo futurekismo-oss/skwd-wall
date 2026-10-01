@@ -29,3 +29,15 @@ fn nested_source_controls_match_case_insensitive_search() {
         assert!(results.iter().all(|result| result.tab == "sources"));
     }
 }
+
+#[test]
+fn turkish_search_matches_dotted_and_dotless_i() {
+    for (title, query) in [
+        ("İndirmeler", "indirmeler"),
+        ("Işık", "ışık"),
+        ("IŞIK", "ışık"),
+        ("İNDİRMELER", "indirmeler"),
+    ] {
+        assert_eq!(normalized(title), normalized(query), "{title}: {query}");
+    }
+}

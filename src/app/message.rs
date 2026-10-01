@@ -34,6 +34,9 @@ pub enum Message {
     CycleSort {
         backwards: bool,
     },
+    CycleMode {
+        backwards: bool,
+    },
     ToggleHiddenFolders,
     SetSort(String),
     SetOrient(String),
@@ -44,6 +47,7 @@ pub enum Message {
     FolderMenuToggle,
     FolderMenuScroll(f32),
     ToggleSettings,
+    Stash,
     ToggleAudio,
     Audio(crate::frontend::audio_panel::AudioMsg),
     ToggleAudioPanel,
@@ -85,6 +89,12 @@ pub enum Message {
     DeletePreset(String, String),
     KeyUp,
     KeyDown,
+    KeyPage {
+        backwards: bool,
+    },
+    KeyEdge {
+        last: bool,
+    },
     Tag(crate::frontend::tagcloud::TagMsg),
     ToggleTagMode,
     MassTagInput(String),
@@ -92,6 +102,7 @@ pub enum Message {
     MassTagRemove(usize),
     MassTagApply,
     ToggleRandomRotate,
+    ApplyRandom,
     OpenTagCloud,
     CloseTagCloud,
     PaneWheel(&'static str, f32),

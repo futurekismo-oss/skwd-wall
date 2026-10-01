@@ -70,8 +70,10 @@ fn clicks_run_bound_action() {
     assert!(app.panels.playlists.is_some());
     let _ = update(&mut app, Message::ClosePlaylists);
 
-    let _ =
-        update(&mut app, Message::Settings(SettingsMsg::KeybindCapture("keys.favourite".into())));
+    let _ = update(
+        &mut app,
+        Message::Settings(SettingsMsg::KeybindCapture("keys.favourite".into(), 0)),
+    );
     let _ =
         update(&mut app, Message::Settings(SettingsMsg::KeybindCaptureClick(MouseButton::Left)));
     let _ = update(&mut app, Message::Settings(SettingsMsg::KeybindCaptureApply));
@@ -84,8 +86,10 @@ fn clicks_run_bound_action() {
     let _ = update(&mut app, Message::Click(hit.cx, hit.cy, MouseButton::Left));
     assert_ne!(favourited(&app), before);
 
-    let _ =
-        update(&mut app, Message::Settings(SettingsMsg::KeybindCapture("keys.favourite".into())));
+    let _ = update(
+        &mut app,
+        Message::Settings(SettingsMsg::KeybindCapture("keys.favourite".into(), 0)),
+    );
     let _ = update(&mut app, Message::Settings(SettingsMsg::KeybindCaptureUnbind));
     let _ = update(&mut app, Message::Settings(SettingsMsg::KeybindCaptureApply));
     let before = favourited(&app);

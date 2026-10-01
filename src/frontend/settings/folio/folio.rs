@@ -833,13 +833,14 @@ fn picker_layout_field<'a>(
         );
     }
     if setting.control.is_inline_editor() {
-        let (focused, _) = focus.on(SettingsFocus::Controls, index);
+        let (focused, focused_choice) = focus.on(SettingsFocus::Controls, index);
         return compact_inline_field(
             setting,
             index,
             values,
             has_selected_preset,
             focused,
+            focused_choice,
             available_width,
             scale,
             palette,
@@ -1285,6 +1286,12 @@ fn reading_surface<'a>(input: ReadingInput<'a>, focus: FocusCtx<'_>) -> Element<
                 .line_height(iced::widget::text::LineHeight::Relative(1.0))
                 .color(with_alpha(palette.surface_text, fade)),
             container(text("")).width(Length::Fill),
+            crate::frontend::ui::folio_icon_action(
+                crate::frontend::ui::EYE_CLOSED,
+                Message::Stash,
+                scale,
+                palette,
+            ),
             crate::frontend::ui::folio_action(
                 "×",
                 false,
@@ -1294,6 +1301,7 @@ fn reading_surface<'a>(input: ReadingInput<'a>, focus: FocusCtx<'_>) -> Element<
                 palette,
             ),
         ]
+        .spacing(8.0 * scale)
         .align_y(Alignment::Start),
         container(
             label(
@@ -1585,6 +1593,7 @@ fn compact_inline_field<'a>(
     values: &'a HashMap<String, String>,
     has_selected_preset: bool,
     focused: bool,
+    focused_choice: Option<usize>,
     available_width: f32,
     scale: f32,
     palette: &'a Palette,
@@ -1595,7 +1604,7 @@ fn compact_inline_field<'a>(
     let editor_width = match &control {
         Control::Number { .. } => (available_width * 0.34).clamp(118.0 * scale, 176.0 * scale),
         Control::TextField { .. } => (available_width * 0.42).clamp(142.0 * scale, 248.0 * scale),
-        Control::KeyBinding { .. } => (available_width * 0.4).clamp(132.0 * scale, 210.0 * scale),
+        Control::KeyBinding { .. } => (available_width * 0.5).clamp(176.0 * scale, 300.0 * scale),
         _ => unreachable!("compact inline field requires one scalar editor"),
     };
     let copy_width = (available_width - editor_width - 44.0 * scale).max(72.0 * scale);
@@ -1605,7 +1614,7 @@ fn compact_inline_field<'a>(
         values,
         has_selected_preset,
         focused,
-        None,
+        focused_choice,
         editor_width,
         scale * 0.78,
         palette,
@@ -1899,13 +1908,14 @@ fn field<'a>(
         );
     }
     if setting.control.is_inline_editor() {
-        let (focused, _) = focus.on(SettingsFocus::Controls, index);
+        let (focused, focused_choice) = focus.on(SettingsFocus::Controls, index);
         return compact_inline_field(
             setting,
             index,
             values,
             has_selected_preset,
             focused,
+            focused_choice,
             available_width,
             scale,
             palette,
@@ -2093,6 +2103,7 @@ fn detail_rows<'a>(
                 values,
                 has_selected_preset,
                 false,
+                None,
                 (available_width - 24.0 * scale).max(160.0 * scale),
                 scale * 0.94,
                 palette,

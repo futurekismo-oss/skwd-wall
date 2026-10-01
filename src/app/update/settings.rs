@@ -109,7 +109,7 @@ pub(super) fn update(app: &mut App, msg: SettingsMsg) -> Task<Message> {
         }
         SettingsMsg::Key(key) => settings_key(app, key),
         SettingsMsg::Run(id) => settings_run(app, id),
-        SettingsMsg::KeybindCapture(path) => open_keybind_capture(app, &path),
+        SettingsMsg::KeybindCapture(path, slot) => open_keybind_capture(app, &path, slot),
         SettingsMsg::KeybindCaptureCancel => {
             app.panels.settings.keybind_capture = None;
             app.retick();
@@ -213,7 +213,7 @@ fn save_processes(app: &mut App, processes: &[String]) {
     app.retick();
 }
 
-fn open_keybind_capture(app: &mut App, path: &str) -> Task<Message> {
+fn open_keybind_capture(app: &mut App, path: &str, slot: usize) -> Task<Message> {
     let Some(descriptor) =
         crate::contracts::picker::KEY_BINDINGS.into_iter().find(|entry| entry.path == path)
     else {
@@ -221,11 +221,14 @@ fn open_keybind_capture(app: &mut App, path: &str) -> Task<Message> {
     };
     commit_settings_input_edit(app);
     close_settings_search(app);
+    let slot = slot.min(crate::domain::input::SLOTS - 1);
+    let current = app.input.bindings.triggers(descriptor.action);
     app.panels.settings.keybind_capture = Some(crate::app::state::KeybindCapture {
         path: path.to_string(),
         action: descriptor.action,
         title_key: descriptor.title_key,
-        triggers: app.input.bindings.triggers(descriptor.action).to_vec(),
+        slot,
+        triggers: crate::domain::input::slot_triggers(current, slot).to_vec(),
         edited: false,
     });
     app.retick();
@@ -250,37 +253,75 @@ fn apply_keybind_capture(app: &mut App) -> Task<Message> {
         app.retick();
         return Task::none();
     }
-    let value = crate::domain::input::binding_config(&capture.triggers);
-    let stolen: Vec<_> = capture
-        .triggers
+    commit_binding_slot(
+        app,
+        capture.action,
+        &capture.path,
+        capture.slot,
+        capture.triggers.into_iter().next(),
+    );
+    Task::none()
+}
+
+fn commit_binding_slot(
+    app: &mut App,
+    action: crate::domain::input::InputAction,
+    path: &str,
+    slot: usize,
+    replacement: Option<crate::domain::input::Trigger>,
+) {
+    use crate::domain::input::{binding_config, parse_binding, with_slot};
+    let stolen: Vec<_> = replacement
         .iter()
         .flat_map(|trigger| {
             app.input
                 .bindings
-                .trigger_holders(capture.action, trigger)
+                .trigger_holders(action, trigger)
                 .map(|other| (other, trigger.clone()))
         })
         .collect();
-    for (action, trigger) in stolen {
+    for (other, trigger) in stolen {
         let Some(descriptor) =
-            crate::contracts::picker::KEY_BINDINGS.into_iter().find(|entry| entry.action == action)
+            crate::contracts::picker::KEY_BINDINGS.into_iter().find(|entry| entry.action == other)
         else {
             continue;
         };
         let remaining: Vec<_> = app
             .input
             .bindings
-            .triggers(action)
+            .triggers(other)
             .iter()
             .filter(|existing| **existing != trigger)
             .cloned()
             .collect();
-        let value = crate::domain::input::binding_config(&remaining);
+        let value = binding_config(&remaining);
         app.panels.settings.inputs.insert(descriptor.path.to_string(), value.clone());
         super::settings_policy::stage_value(app, descriptor.path, &json!(value));
     }
-    store_keybind(app, &capture.path, &value);
-    Task::none()
+    let triggers = with_slot(app.input.bindings.triggers(action), slot, replacement);
+    let value = if parse_binding(action.default_binding()).as_deref() == Some(triggers.as_slice()) {
+        String::new()
+    } else {
+        binding_config(&triggers)
+    };
+    store_keybind(app, path, &value);
+}
+
+fn set_nav_keys(app: &mut App, keys: crate::domain::input::NavKeys) {
+    for (action, key) in keys.second_keys() {
+        let Some(descriptor) =
+            crate::contracts::picker::KEY_BINDINGS.into_iter().find(|entry| entry.action == action)
+        else {
+            continue;
+        };
+        commit_binding_slot(
+            app,
+            action,
+            descriptor.path,
+            1,
+            crate::domain::input::Trigger::parse(key),
+        );
+    }
 }
 
 fn store_keybind(app: &mut App, path: &str, value: &str) {
@@ -550,6 +591,7 @@ fn choice_count(control: &Control) -> usize {
     match control {
         Control::Dropdown { options, .. } | Control::Chips { options, .. } => options.len(),
         Control::ActionChips { items } => items.len(),
+        Control::KeyBinding { .. } => crate::domain::input::SLOTS,
         Control::Presets { items, .. } => 1 + items.len() * 2,
         _ => 0,
     }
@@ -563,6 +605,7 @@ fn choice_enabled(control: &Control, index: usize) -> bool {
         }
         Control::Presets { items, .. } => index < 1 + items.len() * 2,
         Control::ActionChips { items } => index < items.len(),
+        Control::KeyBinding { .. } => index < crate::domain::input::SLOTS,
         _ => false,
     }
 }
@@ -861,7 +904,15 @@ fn activate_settings_control(app: &mut App) -> Task<Message> {
             })
         }
         Control::Toggle { path, value } => settings_toggle(app, &path, !value),
-        Control::KeyBinding { path, .. } => open_keybind_capture(app, &path),
+        Control::KeyBinding { path, .. } => {
+            let Some(slot) = app.panels.settings.focused_choice else {
+                app.panels.settings.focused_choice = Some(0);
+                app.retick();
+                return Task::none();
+            };
+            app.panels.settings.focused_choice = None;
+            open_keybind_capture(app, &path, slot)
+        }
         Control::Number { key, .. } | Control::TextField { key, .. } => {
             begin_settings_input_edit(app, &key);
             iced::widget::operation::focus(crate::frontend::settings::workbench_input_id(&key))
@@ -1461,9 +1512,7 @@ pub(super) fn settings_run(app: &mut App, id: ActionId) -> Task<Message> {
             app.daemon.client.call("wall.refresh_overview_backdrop", json!({}));
         }
         ActionId::CopyLayerRule => {
-            return iced::clipboard::write(String::from(
-                "layer-rule {\n    match namespace=\"^skwd-paper-backdrop$\"\n    place-within-backdrop true\n}",
-            ));
+            return iced::clipboard::write(String::from(crate::frontend::settings::NIRI_SNIPPET));
         }
         ActionId::ImportSemanticModel => return import_semantic_model(app),
         ActionId::DeleteSemanticModel(index) => return delete_semantic_model(app, Some(index)),
@@ -1501,6 +1550,7 @@ pub(super) fn settings_run(app: &mut App, id: ActionId) -> Task<Message> {
         }
         ActionId::ResetMotionSlow => reset_motion_weight(app, skwd_config::keys::motion::SLOW_MS),
         ActionId::ResetKeybinds => reset_keybinds(app),
+        ActionId::SetNavKeys(keys) => set_nav_keys(app, keys),
     }
     Task::none()
 }
@@ -1692,6 +1742,19 @@ pub(super) fn set_view_mode(app: &mut App, mode: &str) -> Task<Message> {
     app.init_settings_inputs();
     app.invalidate_settings();
     Task::none()
+}
+
+pub(super) fn cycle_view_mode(app: &mut App, backwards: bool) -> Task<Message> {
+    use crate::contracts::picker::Mode;
+    if app.menu_capturing() {
+        return Task::none();
+    }
+    let keys = Mode::ALL.map(Mode::as_key);
+    let current = Mode::from_key(&app.config.display_mode()).as_key();
+    match crate::frontend::ui::cycle_key(&keys, current, backwards) {
+        Some(mode) => set_view_mode(app, mode),
+        None => Task::none(),
+    }
 }
 
 pub(super) fn apply_preset(app: &mut App, mode: &str, name: &str) -> Task<Message> {

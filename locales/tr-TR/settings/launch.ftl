@@ -1,0 +1,12 @@
+settings-launch-launch-card = Açılış
+settings-launch-launch-card-desc = Seçici yaklaşık 150 ms içinde başlar ve kapandığında tamamen çıkar. Bu ayarlar yalnızca başlatma sırasında nasıl göründüğünü değiştirir.
+settings-launch-animation-label = Animasyon
+settings-launch-animation-desc = Yok, seçiciyi hazır olur olmaz gösterir ve en hızlı seçenektir. Solma yalnızca opaklığı değiştirir; Yükselme ve Yakınlaştırma hareket ekler.
+settings-launch-animation-none = Yok
+settings-launch-animation-fade = Solma
+settings-launch-animation-rise = Yükselme
+settings-launch-animation-zoom = Yakınlaştırma
+settings-launch-motion-label = Hareket
+settings-launch-motion-desc = Paylaşılan seçici arayüzü hızı. Hareket ayarlarında Hızlı, Standart ve Yavaş hızlarını değiştirin.
+settings-launch-fade-from-label = Başlangıç opaklığı
+settings-launch-fade-from-desc = Girişin başladığı opaklık, yüzde olarak.

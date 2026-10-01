@@ -1,0 +1,49 @@
+audio-masthead = صدا / میکسر
+audio-index-title = صدا
+audio-index-desc = کاغذدیواری هر نمایشگر را جداگانه مکث دهید. نمایشگرهایی که منبع یکسان دارند، تنظیمات بلندی صدا و بی‌صدا کردن مشترک دارند.
+audio-detecting-outputs = در حال شناسایی خروجی‌ها
+audio-state-sound = باصدا
+audio-state-muted = بی‌صدا
+audio-state-none = بدون صدا
+audio-shared-outputs = خروجی‌های مشترک
+audio-live-mix = صدای فعلی
+audio-live-mix-summary = { $audible } در حال پخش · { $available } دارای صدا
+audio-kind-video = کاغذدیواری ویدیویی
+audio-kind-we = صحنهٔ Wallpaper Engine
+audio-kind-static = کاغذدیواری ثابت
+audio-kind-none = بدون منبع کاغذدیواری
+audio-row-sound = ◆  باصدا
+audio-row-muted = ◇  بی‌صدا
+audio-row-none = -  بدون صدا
+audio-linked-source = منبع پیوندی
+audio-independent-source = منبع مستقل
+audio-channel-label = صدا
+audio-no-channel = این کاغذدیواری کانال صدا ندارد.
+audio-outputs-kicker = صدا / نمایشگرها
+audio-mixer-heading = میکسر کاغذدیواری
+audio-mixer-desc = پخش هر نمایشگر را جداگانه مکث دهید. بلندی صدا و بی‌صدا کردن برای کاغذدیواری‌های مشترک پیوندی می‌ماند.
+audio-outputs-summary =
+    { $total } { $total ->
+        [one] خروجی
+       *[other] خروجی
+    } · { $available } دارای صدا · { $sounding } در حال پخش
+audio-output-channels = کانال‌های خروجی
+audio-output-channels-desc = کانال‌های بی‌صدا تیره می‌مانند. نمایشگرهایی که منبع یکسان دارند، تنظیمات بلندی صدا و بی‌صدا کردن مشترک دارند.
+audio-looking-displays = در حال یافتن نمایشگرها
+audio-looking-displays-desc = وقتی سرویس کاغذدیواری نمایشگرها را گزارش کند، کنترل‌های صدا اینجا ظاهر می‌شوند.
+audio-live-state = وضعیت فعلی
+audio-live-none = اکنون صدای هیچ کاغذدیواری پخش نمی‌شود.
+audio-live-playing = کانال‌های برجسته‌شده در حال پخش صدا هستند.
+audio-close-mixer = بستن میکسر
+audio-source-video = ویدیو
+audio-source-wallpaper-engine = Wallpaper Engine
+audio-source-we-id = Wallpaper Engine ({ $id })
+audio-source-static-image = تصویر ثابت
+audio-wallpaper-label = کاغذدیواری
+audio-pause-wallpaper = مکث کاغذدیواری
+audio-resume-wallpaper = ادامهٔ کاغذدیواری
+audio-wallpaper-paused = مکث دستی
+audio-wallpaper-held = مکث به‌دلیل قانون دیگر
+audio-wallpaper-playing = در حال پخش
+audio-state-paused = مکث‌شده
+audio-playback-error = تغییر پخش کاغذدیواری ممکن نشد: { $error }

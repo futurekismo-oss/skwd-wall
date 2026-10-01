@@ -13,7 +13,10 @@ const PREHEAT_DEBOUNCE: Duration = Duration::from_millis(120);
 
 impl App {
     pub(in crate::app) fn schedule_frame(&mut self) {
-        if self.scene.viewport.0 <= 0.0 || self.scene.viewport.1 <= 0.0 {
+        if self.runtime_state.stashed
+            || self.scene.viewport.0 <= 0.0
+            || self.scene.viewport.1 <= 0.0
+        {
             self.clear_animation_phase();
             self.runtime_state.frame_clock.schedule(None);
             return;
@@ -52,7 +55,10 @@ impl App {
     }
 
     pub(in crate::app) fn retick(&mut self) {
-        if self.scene.viewport.0 <= 0.0 || self.scene.viewport.1 <= 0.0 {
+        if self.runtime_state.stashed
+            || self.scene.viewport.0 <= 0.0
+            || self.scene.viewport.1 <= 0.0
+        {
             return;
         }
         let now = Instant::now();

@@ -19,6 +19,7 @@ pub(crate) fn bar_intent_message(intent: crate::frontend::ui::BarIntent) -> Mess
             BarAction::Color(value) => Message::SetColorFilter(value),
             BarAction::FolderToggle => Message::FolderMenuToggle,
             BarAction::Settings => Message::ToggleSettings,
+            BarAction::Stash => Message::Stash,
             BarAction::Download => Message::OpenSourceBrowser,
             BarAction::Playlists => Message::Pl(crate::frontend::playlists::PlMsg::OpenPicker),
             BarAction::Random => Message::ToggleRandomRotate,

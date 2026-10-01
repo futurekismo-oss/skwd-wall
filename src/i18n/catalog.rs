@@ -125,6 +125,22 @@ pub const LANGUAGES: &[Language] = &[
         rtl: false,
         script: Script::Devanagari,
     },
+    Language {
+        tag: "fa-IR",
+        prefix: "fa",
+        label: "settings-language-persian",
+        resources: FA_IR_RESOURCES,
+        rtl: true,
+        script: Script::Arabic,
+    },
+    Language {
+        tag: "tr-TR",
+        prefix: "tr",
+        label: "settings-language-turkish",
+        resources: TR_TR_RESOURCES,
+        rtl: false,
+        script: Script::Latin,
+    },
 ];
 
 pub struct Catalog {

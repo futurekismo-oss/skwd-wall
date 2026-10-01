@@ -114,7 +114,10 @@ fn normalized(value: &str) -> String {
             out.push(' ');
         }
         if character.is_alphanumeric() {
-            out.extend(character.to_lowercase());
+            match character {
+                'İ' | 'ı' => out.push('i'),
+                _ => out.extend(character.to_lowercase()),
+            }
             previous_lower = character.is_lowercase() || character.is_numeric();
         } else {
             if !out.ends_with(' ') {

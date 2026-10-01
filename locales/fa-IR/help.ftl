@@ -1,0 +1,9 @@
+help-shortcuts = میان‌برها
+help-keyboard = صفحه‌کلید
+help-mouse = ماوس
+help-key-esc = Esc
+help-mouse-wheel = چرخ
+help-mouse-hover = نگه‌داشتن نشانگر
+help-close-back-quit = بستن / بازگشت / خروج
+help-wheel = مرور / پیمایش
+help-hover = پیش‌نمایش ویدیوها

@@ -53,9 +53,20 @@ pub(crate) fn browser_key_nav(app: &mut App, delta: i64) -> Task<Message> {
     if next < 0 || next >= count {
         return Task::none();
     }
-    let next = next as usize;
+    browser_select(app, next as usize)
+}
+
+pub(crate) fn browser_select(app: &mut App, next: usize) -> Task<Message> {
+    let Some(count) =
+        app.source_browser.browser.as_ref().map(|browser| browser.session.items.len())
+    else {
+        return Task::none();
+    };
+    if next >= count {
+        return Task::none();
+    }
     app.source_browser.wall.scene.kb_nav = true;
-    app.source_browser.wall.scene.set_current(next, count as usize);
+    app.source_browser.wall.scene.set_current(next, count);
     app.source_browser.wall.scene.hover = Some(next);
     if let Some(browser) = app.source_browser.browser.as_mut() {
         browser.session.hover = Some(next);

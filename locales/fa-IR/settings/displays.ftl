@@ -1,0 +1,10 @@
+settings-displays-card = کاغذدیواری‌های فعلی
+settings-displays-card-desc = این کاغذدیواری‌ها را سرویس کاغذدیواری گزارش کرده است. تغییرات اینجا هر بار روی یک نمایشگر اعمال می‌شوند.
+settings-displays-monitor-desc = { $width } × { $height } · { $kind }
+settings-displays-monitor-offline-desc = آفلاین · { $width } × { $height }
+settings-displays-placement-label = جای‌گیری
+settings-displays-placement-desc = انتخاب کنید کاغذدیواری نمایشگر را پر کند، در آن جا بگیرد، کشیده شود، در وسط قرار گیرد، کاشی‌کاری شود یا در چند نمایشگر گسترده شود.
+settings-displays-lock-label = قفل
+settings-displays-lock-desc = کاغذدیواری این نمایشگر فقط از راه انتخابگر چندگانه به‌روزرسانی شود.
+settings-displays-empty-label = در حال شناسایی نمایشگرها
+settings-displays-empty-desc = وقتی سرویس کاغذدیواری نمایشگرها را گزارش کند، کاغذدیواری‌های فعلی اینجا ظاهر می‌شوند.

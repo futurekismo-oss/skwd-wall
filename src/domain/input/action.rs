@@ -63,12 +63,19 @@ pub enum InputAction {
     NavRight,
     NavUp,
     NavDown,
+    PageBack,
+    PageForward,
+    JumpFirst,
+    JumpLast,
+    ModePrev,
+    ModeNext,
     Autocomplete,
     TypePrev,
     TypeNext,
     SortPrev,
     SortNext,
     RandomRotate,
+    RandomApply,
     Downloads,
     SearchMode,
     SourceWallhaven,
@@ -80,7 +87,7 @@ pub enum InputAction {
 }
 
 impl InputAction {
-    pub const ALL: [Self; 39] = [
+    pub const ALL: [Self; 46] = [
         Self::Select,
         Self::Apply,
         Self::Flip,
@@ -106,12 +113,19 @@ impl InputAction {
         Self::NavRight,
         Self::NavUp,
         Self::NavDown,
+        Self::PageBack,
+        Self::PageForward,
+        Self::JumpFirst,
+        Self::JumpLast,
+        Self::ModePrev,
+        Self::ModeNext,
         Self::Autocomplete,
         Self::TypePrev,
         Self::TypeNext,
         Self::SortPrev,
         Self::SortNext,
         Self::RandomRotate,
+        Self::RandomApply,
         Self::Downloads,
         Self::SearchMode,
         Self::SourceWallhaven,
@@ -136,7 +150,7 @@ impl InputAction {
             Self::Settings => "shift+s",
             Self::Help => "?",
             Self::ThemePanel => "c",
-            Self::TagCloud => "shift+down",
+            Self::TagCloud => "shift+down, /",
             Self::TagMode => "t",
             Self::FilterBar => "shift+up",
             Self::FolderPrev => "ctrl+left",
@@ -145,15 +159,22 @@ impl InputAction {
             Self::HiddenFolders => "ctrl+h",
             Self::ColorPrev => "shift+left",
             Self::ColorNext => "shift+right",
-            Self::NavLeft => "left",
-            Self::NavRight => "right",
-            Self::NavUp => "up",
-            Self::NavDown => "down",
+            Self::NavLeft => "left, a",
+            Self::NavRight => "right, d",
+            Self::NavUp => "up, w",
+            Self::NavDown => "down, s",
+            Self::PageBack => "pageup",
+            Self::PageForward => "pagedown",
+            Self::JumpFirst => "home",
+            Self::JumpLast => "end",
+            Self::ModePrev => "shift+m",
+            Self::ModeNext => "m",
             Self::Autocomplete | Self::TypeNext => "tab",
             Self::TypePrev => "shift+tab",
             Self::SortPrev => "alt+left",
             Self::SortNext => "alt+right",
             Self::RandomRotate => "ctrl+r",
+            Self::RandomApply => "none",
             Self::Downloads => "ctrl+d",
             Self::SearchMode => "ctrl+tab",
             Self::SourceWallhaven => "1",
@@ -167,7 +188,11 @@ impl InputAction {
 
     pub const fn scope(self) -> InputScope {
         match self {
-            Self::TypePrev | Self::TypeNext => InputScope::Picker,
+            Self::TypePrev
+            | Self::TypeNext
+            | Self::ModePrev
+            | Self::ModeNext
+            | Self::RandomApply => InputScope::Picker,
             Self::Autocomplete => InputScope::Fields,
             Self::SearchMode => InputScope::Search,
             Self::SourceWallhaven

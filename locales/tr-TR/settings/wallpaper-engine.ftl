@@ -1,0 +1,16 @@
+settings-wallpaper-engine-rendering-card = İşleme
+settings-wallpaper-engine-rendering-card-desc = Yerleşik Vulkan işleyicisi bir Atölye sahnesini gösterirken kullanılacak varsayılanları ayarlayın.
+settings-wallpaper-engine-fps-label = FPS sınırı
+settings-wallpaper-engine-fps-desc = Saniyedeki en fazla kare sayısı. Düşük değerler CPU/GPU yükünü azaltır.
+settings-wallpaper-engine-scaling-label = Varsayılan ölçekleme
+settings-wallpaper-engine-scaling-desc = Atölye sahnelerinin her monitöre nasıl sığdırılacağı. Varsayılan, genel doldurma modunu izler.
+settings-wallpaper-engine-scaling-default = Genel varsayılan
+settings-wallpaper-engine-scaling-fill = Doldur
+settings-wallpaper-engine-scaling-fit = Sığdır
+settings-wallpaper-engine-scaling-stretch = Uzat
+settings-wallpaper-engine-scaling-center = Ortala
+settings-wallpaper-engine-scaling-tile = Döşe
+settings-wallpaper-engine-scaling-span = Ekranlara yay
+settings-wallpaper-engine-effects-card = Efektler
+settings-wallpaper-engine-particles-label = Parçacıkları devre dışı bırak
+settings-wallpaper-engine-particles-desc = Parçacık kullanan sahnelerde parçacık katmanlarını atlayın. Bu, GPU yükünü azaltabilir ancak o sahneler animasyonlarının bir bölümünü kaybeder.

@@ -1,7 +1,7 @@
 use crate::contracts::settings::{EFFECT_NAMES, GraphicsTier, keys};
 use crate::i18n::{settings_sand_meter_detail, tr, tr_args};
 
-use super::super::tables::{MODES, motion_speed_options};
+use super::super::tables::motion_speed_options;
 use super::builder::{folder_dropdown_options, type_chip_label};
 use super::{ActionId, Builder, Control, PRESET_NAME_KEY};
 
@@ -25,9 +25,11 @@ pub(super) fn tab_selector(builder: &mut Builder<'_>) {
         tr("settings-selector-display-mode-desc"),
         Control::Chips {
             path: keys::selector::DISPLAY_MODE.to_string(),
-            options: MODES
+            options: crate::contracts::picker::Mode::ALL
                 .iter()
-                .map(|value| ((*value).to_string(), tr(mode_label_key(value)).to_string()))
+                .map(|mode| {
+                    (mode.as_key().to_string(), tr(mode_label_key(mode.as_key())).to_string())
+                })
                 .collect(),
             current: display_mode.to_string(),
             disabled: Vec::new(),

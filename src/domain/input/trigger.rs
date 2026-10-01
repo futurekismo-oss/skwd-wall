@@ -53,6 +53,10 @@ pub enum KeyId {
     Down,
     Enter,
     Tab,
+    Home,
+    End,
+    PageUp,
+    PageDown,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -74,6 +78,8 @@ pub enum Trigger {
 }
 
 pub const UNBOUND: &str = "none";
+
+pub const SLOTS: usize = 2;
 
 impl Trigger {
     pub fn parse(text: &str) -> Option<Self> {
@@ -116,6 +122,10 @@ impl Trigger {
             "down" => KeyId::Down,
             "enter" | "return" => KeyId::Enter,
             "tab" => KeyId::Tab,
+            "home" => KeyId::Home,
+            "end" => KeyId::End,
+            "pageup" => KeyId::PageUp,
+            "pagedown" => KeyId::PageDown,
             "space" => KeyId::Char(" ".to_string()),
             key if key.chars().count() == 1 => KeyId::Char(key.to_string()),
             _ => return None,
@@ -135,6 +145,10 @@ impl Trigger {
                     KeyId::Down => output.push_str("Down"),
                     KeyId::Enter => output.push_str("Enter"),
                     KeyId::Tab => output.push_str("Tab"),
+                    KeyId::Home => output.push_str("Home"),
+                    KeyId::End => output.push_str("End"),
+                    KeyId::PageUp => output.push_str("Page Up"),
+                    KeyId::PageDown => output.push_str("Page Down"),
                     KeyId::Char(character) if character == " " => output.push_str("Space"),
                     KeyId::Char(character) => output.push_str(&character.to_uppercase()),
                 }
@@ -163,6 +177,10 @@ impl Trigger {
                     KeyId::Down => output.push_str("down"),
                     KeyId::Enter => output.push_str("enter"),
                     KeyId::Tab => output.push_str("tab"),
+                    KeyId::Home => output.push_str("home"),
+                    KeyId::End => output.push_str("end"),
+                    KeyId::PageUp => output.push_str("pageup"),
+                    KeyId::PageDown => output.push_str("pagedown"),
                     KeyId::Char(character) if character == " " => output.push_str("space"),
                     KeyId::Char(character) => output.push_str(character),
                 }
@@ -204,4 +222,25 @@ pub fn binding_config(triggers: &[Trigger]) -> String {
 
 pub fn binding_label(triggers: &[Trigger]) -> String {
     triggers.iter().map(Trigger::label).collect::<Vec<_>>().join(" \u{b7} ")
+}
+
+pub fn slot_triggers(triggers: &[Trigger], slot: usize) -> &[Trigger] {
+    let (primary, secondary) = triggers.split_at(triggers.len().min(1));
+    if slot == 0 { primary } else { secondary }
+}
+
+pub fn with_slot(triggers: &[Trigger], slot: usize, replacement: Option<Trigger>) -> Vec<Trigger> {
+    let (primary, secondary) = triggers.split_at(triggers.len().min(1));
+    let combined: Vec<Trigger> = if slot == 0 {
+        replacement.into_iter().chain(secondary.iter().cloned()).collect()
+    } else {
+        primary.iter().cloned().chain(replacement).collect()
+    };
+    let mut unique = Vec::with_capacity(combined.len());
+    for trigger in combined {
+        if !unique.contains(&trigger) {
+            unique.push(trigger);
+        }
+    }
+    unique
 }

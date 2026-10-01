@@ -63,11 +63,15 @@ pub(super) fn tab_paper(builder: &mut Builder<'_>) {
             ("overlay", tr("settings-paper-layer-overlay")),
         ],
     );
-    builder.toggle(
-        tr("settings-paper-overview-only-label"),
-        tr("settings-paper-overview-only-desc"),
-        keys::niri::OVERVIEW_ONLY_PLAYBACK,
-    );
+    if !cfg.flag(keys::niri::OVERVIEW_BACKDROP)
+        || cfg.text(keys::niri::OVERVIEW_MODE) != "stationary"
+    {
+        builder.toggle(
+            tr("settings-paper-overview-only-label"),
+            tr("settings-paper-overview-only-desc"),
+            keys::niri::OVERVIEW_ONLY_PLAYBACK,
+        );
+    }
     builder.card(tr("settings-paper-performance-card"), tr("settings-paper-performance-card-desc"));
     builder.toggle(
         tr("settings-paper-multi-process-label"),

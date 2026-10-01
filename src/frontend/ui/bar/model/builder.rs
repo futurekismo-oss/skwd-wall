@@ -1,7 +1,7 @@
 use crate::domain::library::filter::Filters;
 use crate::i18n::tr;
 
-use super::super::super::misc::text_width;
+use super::super::super::misc::{EYE_CLOSED, text_width};
 use super::super::super::rtl;
 use super::super::super::theme_bar::ThemeBar;
 use super::super::action::BarAction;
@@ -117,6 +117,7 @@ pub fn build_bar_with_tasks(
     }
 
     push_item(&mut items, &mut x, scale, "\u{f0493}", true, false, Some(BarAction::Settings));
+    push_item(&mut items, &mut x, scale, EYE_CLOSED, true, false, Some(BarAction::Stash));
 
     task_items(&mut items, &mut x, scale, tasks);
 

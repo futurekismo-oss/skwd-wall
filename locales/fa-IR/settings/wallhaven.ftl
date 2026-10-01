@@ -1,0 +1,17 @@
+settings-wallhaven-grid-card = شبکه
+settings-wallhaven-columns-label = ستون‌ها
+settings-wallhaven-columns-desc = تعداد تصاویر بندانگشتی در هر ردیف.
+settings-wallhaven-rows-label = ردیف‌ها
+settings-wallhaven-rows-desc = تعداد ردیف‌هایی که هم‌زمان دیده می‌شوند.
+settings-wallhaven-thumb-card = تصویر بندانگشتی
+settings-wallhaven-width-label = پهنا
+settings-wallhaven-width-desc = پهنای تصویر بندانگشتی بر حسب پیکسل.
+settings-wallhaven-height-label = ارتفاع
+settings-wallhaven-height-desc = ارتفاع تصویر بندانگشتی بر حسب پیکسل.
+settings-wallhaven-api-card = API
+settings-wallhaven-api-key-label = کلید API
+settings-wallhaven-api-key-desc = برای دسترسی به امکانات حساب و نتایج NSFW، کلید API سرویس Wallhaven را وارد کنید.
+settings-wallhaven-api-key-placeholder = کلید API سرویس Wallhaven (برای NSFW)
+settings-wallhaven-username-label = نام کاربری
+settings-wallhaven-username-desc = برای مرور و بارگیری از مجموعه‌هایتان، نام کاربری Wallhaven خود را وارد کنید.
+settings-wallhaven-username-placeholder = نام کاربری Wallhaven

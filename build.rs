@@ -62,6 +62,8 @@ const LOCALE_CONSTANTS: &[(&str, &str)] = &[
     ("bn-BD", "BN_BD_RESOURCES"),
     ("ur-PK", "UR_PK_RESOURCES"),
     ("hi-IN", "HI_IN_RESOURCES"),
+    ("fa-IR", "FA_IR_RESOURCES"),
+    ("tr-TR", "TR_TR_RESOURCES"),
 ];
 
 fn generate_embedded_locales() {

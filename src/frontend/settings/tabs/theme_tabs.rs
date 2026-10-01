@@ -507,17 +507,31 @@ pub(super) fn tab_niri(builder: &mut Builder<'_>, themes: &[String]) {
         tr("settings-niri-show-desc"),
         keys::niri::OVERVIEW_BACKDROP,
     );
-    builder.toggle(
-        tr("settings-niri-follow-label"),
-        tr("settings-niri-follow-desc"),
-        keys::niri::BACKDROP_FOLLOW_WALLPAPER,
+    builder.dropdown(
+        tr("settings-niri-mode-label"),
+        tr("settings-niri-mode-desc"),
+        keys::niri::OVERVIEW_MODE,
+        &[
+            ("separate", tr("settings-niri-mode-separate")),
+            ("stationary", tr("settings-niri-mode-stationary")),
+        ],
     );
-    builder.text_field(
-        tr("settings-niri-image-label"),
-        tr("settings-niri-image-desc"),
-        keys::niri::BACKDROP,
-        "~/Pictures/overview.jpg",
-    );
+    let stationary = builder.cfg.text(keys::niri::OVERVIEW_MODE) == "stationary";
+    if stationary {
+        builder.info(tr("settings-niri-mode-stationary"), tr("settings-niri-stationary-desc"));
+    } else {
+        builder.toggle(
+            tr("settings-niri-follow-label"),
+            tr("settings-niri-follow-desc"),
+            keys::niri::BACKDROP_FOLLOW_WALLPAPER,
+        );
+        builder.text_field(
+            tr("settings-niri-image-label"),
+            tr("settings-niri-image-desc"),
+            keys::niri::BACKDROP,
+            "~/Pictures/overview.jpg",
+        );
+    }
     builder.action(
         tr("settings-niri-refresh-label"),
         tr("settings-niri-refresh-desc"),
@@ -535,32 +549,52 @@ pub(super) fn tab_niri(builder: &mut Builder<'_>, themes: &[String]) {
         ActionId::CopyLayerRule,
         tr("settings-niri-copy-action"),
     );
-    builder.toggle(
-        tr("settings-niri-blur-label"),
-        tr("settings-niri-blur-desc"),
-        keys::niri::OVERVIEW_BACKDROP_BLUR_ENABLED,
-    );
-    builder.num(
-        tr("settings-niri-blur-radius-label"),
-        tr("settings-niri-blur-radius-desc"),
-        keys::niri::OVERVIEW_BACKDROP_BLUR,
-        "",
-    );
+    for (label, desc, toggle, radius_label, radius_desc, radius) in [
+        (
+            "settings-niri-blur-static-label",
+            "settings-niri-blur-static-desc",
+            keys::niri::BACKDROP_BLUR_STATIC,
+            "settings-niri-blur-static-radius-label",
+            "settings-niri-blur-static-radius-desc",
+            keys::niri::BACKDROP_BLUR_STATIC_RADIUS,
+        ),
+        (
+            "settings-niri-blur-video-label",
+            "settings-niri-blur-video-desc",
+            keys::niri::BACKDROP_BLUR_VIDEO,
+            "settings-niri-blur-video-radius-label",
+            "settings-niri-blur-video-radius-desc",
+            keys::niri::BACKDROP_BLUR_VIDEO_RADIUS,
+        ),
+        (
+            "settings-niri-blur-we-label",
+            "settings-niri-blur-we-desc",
+            keys::niri::BACKDROP_BLUR_WE,
+            "settings-niri-blur-we-radius-label",
+            "settings-niri-blur-we-radius-desc",
+            keys::niri::BACKDROP_BLUR_WE_RADIUS,
+        ),
+    ] {
+        builder.toggle(tr(label), tr(desc), toggle);
+        builder.num(tr(radius_label), tr(radius_desc), radius, "");
+    }
     builder.num(
         tr("settings-niri-dim-label"),
         tr("settings-niri-dim-desc"),
         keys::niri::BACKDROP_DIM,
         "%",
     );
-    builder.toggle(
-        tr("settings-niri-auto-theme-label"),
-        tr("settings-niri-auto-theme-desc"),
-        keys::niri::BACKDROP_AUTO_THEME,
-    );
-    builder.theme_dropdown(
-        tr("settings-niri-theme-label"),
-        tr("settings-niri-theme-desc"),
-        keys::niri::BACKDROP_THEME,
-        themes,
-    );
+    if !stationary {
+        builder.toggle(
+            tr("settings-niri-auto-theme-label"),
+            tr("settings-niri-auto-theme-desc"),
+            keys::niri::BACKDROP_AUTO_THEME,
+        );
+        builder.theme_dropdown(
+            tr("settings-niri-theme-label"),
+            tr("settings-niri-theme-desc"),
+            keys::niri::BACKDROP_THEME,
+            themes,
+        );
+    }
 }

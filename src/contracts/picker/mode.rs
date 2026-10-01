@@ -10,6 +10,16 @@ pub enum Mode {
 }
 
 impl Mode {
+    pub const ALL: [Self; 7] = [
+        Self::Slices,
+        Self::Depth,
+        Self::Hex,
+        Self::Grid,
+        Self::Sandy,
+        Self::Hand,
+        Self::Collection,
+    ];
+
     pub fn try_from_key(value: &str) -> Option<Self> {
         match value {
             "slices" => Some(Self::Slices),

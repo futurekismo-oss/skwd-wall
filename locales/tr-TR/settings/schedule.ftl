@@ -1,0 +1,15 @@
+settings-schedule-schedule-card = Zamanlama
+settings-schedule-schedule-card-desc = Kurallar; saat, haftanın günü, hava durumu, güç ve ekranlar gibi koşullara göre duvar kâğıdını ve temayı seçer. İlk eşleşen kural uygulanır.
+settings-schedule-enable-label = Zamanlamayı etkinleştir
+settings-schedule-enable-desc = Kuralları silmeden tüm zamanlama kurallarını açın veya kapatın.
+settings-schedule-apply-on-start-label = Başlangıçta uygula
+settings-schedule-apply-on-start-desc = Hizmet başladığında ilk eşleşen kuralı uygulayın. Bu oturumda elle seçilen duvar kâğıdı yine önceliklidir.
+settings-schedule-editor-label = Zamanlama düzenleyicisi
+settings-schedule-editor-desc = Koşul bloklarıyla kurallar oluşturun ve önceliği belirlemek için sürükleyin; ilk eşleşme uygulanır. Eski gündüz ve gece ayarları ilk açılışta iki kurala dönüştürülür.
+settings-schedule-editor-action = Aç
+settings-schedule-location-card = Konum
+settings-schedule-location-card-desc = Gün doğumu/batımı saatleri ve hava durumu koşulları için kullanılır.
+settings-schedule-latitude-label = Enlem
+settings-schedule-latitude-desc = Ondalık derece, kuzey pozitif (ör. 59.33).
+settings-schedule-longitude-label = Boylam
+settings-schedule-longitude-desc = Ondalık derece, doğu pozitif (ör. 18.06).

@@ -6,7 +6,9 @@ mod selection;
 mod tags;
 mod theme;
 
-pub(crate) use browser::{apply_browser_defaults, browser_key_nav, browser_wall_params};
+pub(crate) use browser::{
+    apply_browser_defaults, browser_key_nav, browser_select, browser_wall_params,
+};
 pub(crate) use effects::{open_effects, open_effects_without_preview};
 pub(crate) use schedule::{sched_open, sched_persist};
 #[cfg(test)]

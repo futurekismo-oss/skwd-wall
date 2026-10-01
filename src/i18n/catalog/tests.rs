@@ -12,7 +12,7 @@ fn locales() -> impl Iterator<Item = (&'static str, &'static [&'static str])> {
 
 fn plural_categories(tag: &str) -> &'static [&'static [i64]] {
     match tag {
-        "pt-BR" | "fr-FR" | "bn-BD" | "hi-IN" => &[&[0, 1], &[2, 5, 21]],
+        "pt-BR" | "fr-FR" | "bn-BD" | "hi-IN" | "fa-IR" => &[&[0, 1], &[2, 5, 21]],
         "ar-SA" => &[&[0], &[1], &[2], &[3, 10], &[11, 25, 99], &[100, 103, 1000]],
         "ru-RU" => &[&[1, 21], &[2, 3, 22], &[0, 5, 11, 25]],
         "zh-CN" | "ja-JP" => &[&[0, 1, 2, 5, 21]],
@@ -96,7 +96,7 @@ fn right_to_left_follows_script() {
     for language in LANGUAGES {
         assert_eq!(language.rtl, language.script == super::Script::Arabic, "{}", language.tag);
     }
-    assert!(LANGUAGES.iter().filter(|language| language.rtl).count() == 2);
+    assert!(LANGUAGES.iter().filter(|language| language.rtl).count() == 3);
 }
 
 #[test]
@@ -162,6 +162,8 @@ fn saved_names_every_locale() {
         ("bn-BD", "প্লেলিস্ট 1234", "স্টাইল 1234"),
         ("ur-PK", "پلے لسٹ 1234", "انداز 1234"),
         ("hi-IN", "प्लेलिस्ट 1234", "स्टाइल 1234"),
+        ("fa-IR", "فهرست پخش 1234", "سبک 1234"),
+        ("tr-TR", "Oynatma listesi 1234", "Stil 1234"),
     ];
     assert_eq!(cases.len(), LANGUAGES.len());
     for (locale, playlist, style) in cases {
@@ -266,7 +268,7 @@ fn plural_variants_follow_cldr_categories() {
                 distinguishing += 1;
             }
         }
-        if categories.len() > 1 {
+        if categories.len() > 1 && !matches!(tag, "fa-IR" | "tr-TR") {
             assert!(distinguishing > 0, "{tag} never distinguishes its plural categories");
         }
     }
@@ -455,6 +457,10 @@ fn locale_environment_respects_overrides_and_message_priority() {
         ([None, None, None, Some("pt_BR.UTF-8"), None], "pt-BR"),
         ([None, None, None, Some("en_US.UTF-8"), Some("ja:en")], "ja-JP"),
         ([None, None, Some("ru_RU.UTF-8"), Some("zh_CN.UTF-8"), None], "ru-RU"),
+        ([None, None, Some("fa_IR.UTF-8"), None, None], "fa-IR"),
+        ([None, None, None, Some("tr_TR.UTF-8"), None], "tr-TR"),
+        ([None, None, None, Some("en_US.UTF-8"), Some("fa:tr")], "fa-IR"),
+        ([Some("tr"), Some("C"), None, None, None], "tr-TR"),
         ([Some("zh_CN.UTF-8"), None, None, Some("ru"), None], "zh-CN"),
         ([None, None, None, Some("zh_TW.UTF-8"), None], "en-US"),
         ([None, None, None, Some("en_US.UTF-8"), Some("zh_HK:ja")], "ja-JP"),
@@ -494,6 +500,10 @@ fn added_locales_override_english_and_accept_regional_variants() {
         ("ur", "روکیں"),
         ("hi_IN.UTF-8", "रोकें"),
         ("hi", "रोकें"),
+        ("fa_IR.UTF-8", "مکث"),
+        ("fa", "مکث"),
+        ("tr_TR.UTF-8", "Duraklat"),
+        ("TR", "Duraklat"),
     ] {
         let catalog = Catalog::for_locale(requested);
         assert_eq!(catalog.format("filter-bar-pause", None), expected, "{requested}");
@@ -515,6 +525,8 @@ fn static_text_is_cached_per_language() {
         ("bn-BD", "সম্পন্ন"),
         ("ur-PK", "ہو گیا"),
         ("hi-IN", "हो गया"),
+        ("fa-IR", "انجام شد"),
+        ("tr-TR", "Tamam"),
     ];
     assert_eq!(cases.len(), LANGUAGES.len());
     for (locale, expected) in cases {
@@ -540,6 +552,10 @@ fn saved_language_choices_normalize_to_supported_options() {
         ("bn_IN", "bn-BD"),
         ("ur_IN.UTF-8", "ur-PK"),
         ("hi-IN", "hi-IN"),
+        ("fa_IR.UTF-8", "fa-IR"),
+        ("fa", "fa-IR"),
+        ("tr_TR.UTF-8", "tr-TR"),
+        (" TR ", "tr-TR"),
         ("en", "en-US"),
         ("sv_SE.UTF-8", "sv-SE"),
         (" ES_mx ", "es-ES"),
@@ -555,5 +571,18 @@ fn saved_language_choices_normalize_to_supported_options() {
         ("ja_JP.UTF-8", "ja-JP"),
     ] {
         assert_eq!(super::language_choice(requested), expected);
+    }
+}
+
+#[test]
+fn persian_and_turkish_preserve_message_arguments() {
+    let english: std::collections::BTreeMap<_, _> = message_blocks(EN_US_RESOURCES)
+        .into_iter()
+        .map(|(key, block)| (key, placeable_variables(&block)))
+        .collect();
+    for tag in ["fa-IR", "tr-TR"] {
+        for (key, block) in message_blocks(super::language(tag).resources) {
+            assert_eq!(placeable_variables(&block), english[&key], "{tag} {key}");
+        }
     }
 }

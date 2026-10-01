@@ -31,16 +31,18 @@ pub(super) fn mouse_moved(app: &mut App, x: f32, y: f32) -> Task<Message> {
     app.scene.kb_nav = false;
     let hit = app.scene.render.hits.iter().find(|hit| hit.contains(x, y)).map(|hit| hit.index);
     let changed = hit != app.scene.hover;
+    let selects = app.config.hover_selects();
     match app.scene.mode {
         Mode::Slices | Mode::Hex => {
-            if let Some(idx) = hit {
+            if selects && let Some(idx) = hit {
                 app.scene.set_current(idx, app.library_session.filtered.len());
             }
             app.scene.hover = hit;
         }
         Mode::Sandy => {
             app.scene.hover = hit;
-            app.scene.sandy_pointer(x, y, hit, app.library_session.filtered.len());
+            let target = hit.filter(|_| selects);
+            app.scene.sandy_pointer(x, y, target, app.library_session.filtered.len());
         }
         Mode::Hand => {
             app.scene.hover = hit;

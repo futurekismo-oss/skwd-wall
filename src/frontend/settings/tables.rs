@@ -69,8 +69,6 @@ pub fn is_transition_preview_section(tab: &str, section: usize) -> bool {
     tab == "motion" && section == WALLPAPER_TRANSITIONS
 }
 
-pub(super) const MODES: [&str; 7] =
-    ["slices", "depth", "hex", "wall", "sandy", "hand", "collection"];
 pub(super) const POST_TYPES: [&str; 4] =
     ["all", wallpaper_kind::STATIC, wallpaper_kind::VIDEO, wallpaper_kind::WE];
 pub(super) const FILL_MODES: [&str; 6] = ["fill", "fit", "stretch", "center", "tile", "span"];
@@ -126,4 +124,4 @@ pub fn family_default(current: &str, family: &str) -> String {
         .map_or_else(|| String::from("random"), |name| (*name).to_string())
 }
 
-pub(super) const NIRI_SNIPPET: &str = "layer-rule {\n    match namespace=\"^skwd-paper-backdrop$\"\n    place-within-backdrop true\n}";
+pub(crate) const NIRI_SNIPPET: &str = "layer-rule {\n    match namespace=\"^skwd-paper-backdrop$\"\n    place-within-backdrop true\n}\n\nlayer-rule {\n    match namespace=\"^skwd-paper-stationary$\"\n    place-within-backdrop true\n}\n\nlayout {\n    background-color \"transparent\"\n}\n\noverview {\n    workspace-shadow { off; }\n}";

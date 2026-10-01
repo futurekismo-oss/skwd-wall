@@ -171,3 +171,137 @@ fn ui_state_reports_the_sort_chip_and_download_source() {
     assert_eq!(state(&app)["downloads"]["open"], json!(true));
     assert_eq!(state(&app)["downloads"]["source"], json!("wallhaven"));
 }
+
+#[test]
+fn m_cycles_picker_modes_and_wraps() {
+    let mut app = test_app();
+    assert_eq!(app.config.display_mode(), "slices");
+    for expected in ["depth", "hex", "wall", "sandy", "hand", "collection", "slices"] {
+        character(&mut app, "m", Modifiers::default());
+        assert_eq!(app.config.display_mode(), expected);
+    }
+    for expected in ["collection", "hand"] {
+        character(&mut app, "M", Modifiers::SHIFT);
+        assert_eq!(app.config.display_mode(), expected);
+    }
+}
+
+#[test]
+fn m_types_into_search_instead_of_switching_mode() {
+    let mut app = test_app();
+    let _ = update(&mut app, Message::OpenTagCloud);
+    character(&mut app, "m", Modifiers::default());
+    assert_eq!(app.config.display_mode(), "slices");
+}
+
+fn paged_app(mode: &str, count: usize) -> (App, std::time::Instant) {
+    let mut app = test_app();
+    let walls: Vec<Value> =
+        (0..count).map(|i| wall(&format!("w{i}"), "static", (i * 7) as i64, i as i64)).collect();
+    seed(&mut app, &walls);
+    let _ = update(&mut app, Message::SetViewMode(mode.into()));
+    let mut now = std::time::Instant::now();
+    tick_frames(&mut app, &mut now, 30);
+    (app, now)
+}
+
+fn named(app: &mut App, key: Named) {
+    press(app, keyboard::Key::Named(key), Modifiers::default());
+}
+
+#[test]
+fn home_and_end_jump_to_the_edges() {
+    for mode in ["slices", "wall", "hex", "hand", "collection"] {
+        let (mut app, _) = paged_app(mode, 60);
+        named(&mut app, Named::End);
+        assert_eq!(app.scene.current, 59, "{mode}");
+        named(&mut app, Named::Home);
+        assert_eq!(app.scene.current, 0, "{mode}");
+    }
+}
+
+#[test]
+fn page_keys_move_a_screenful_and_keep_the_grid_column() {
+    let (mut app, _) = paged_app("wall", 200);
+    let cols = app.scene.gp.cols.max(1);
+    let visible = app.scene.render.hits.len();
+    assert!(visible > cols, "grid shows more than one row: {visible} hits, {cols} cols");
+    named(&mut app, Named::ArrowRight);
+    let start = app.scene.current;
+    named(&mut app, Named::PageDown);
+    let step = app.scene.current - start;
+    assert_eq!(step % cols, 0, "step {step} keeps the column of {cols}");
+    assert_eq!(step, visible / cols * cols);
+    named(&mut app, Named::PageUp);
+    assert_eq!(app.scene.current, start);
+    named(&mut app, Named::PageUp);
+    assert_eq!(app.scene.current, 0);
+}
+
+#[test]
+fn page_keys_step_by_visible_slices_and_clamp() {
+    let (mut app, _) = paged_app("slices", 30);
+    let visible = app.scene.render.hits.len().max(1);
+    named(&mut app, Named::PageDown);
+    assert_eq!(app.scene.current, visible.min(29));
+    for _ in 0..30 {
+        named(&mut app, Named::PageDown);
+    }
+    assert_eq!(app.scene.current, 29);
+}
+
+#[test]
+fn page_and_edge_keys_stay_out_of_open_panels() {
+    let (mut app, _) = paged_app("wall", 60);
+    let _ = update(&mut app, Message::ToggleSettings);
+    named(&mut app, Named::End);
+    named(&mut app, Named::PageDown);
+    assert_eq!(app.scene.current, 0);
+}
+
+fn applied_path(app: &App) -> Option<String> {
+    drain_calls(app)
+        .into_iter()
+        .rev()
+        .find(|(method, _)| method == "wall.apply")
+        .and_then(|(_, params)| params.get("path").and_then(Value::as_str).map(str::to_string))
+}
+
+#[test]
+fn random_wallpaper_key_applies_another_card() {
+    let (mut app, _) = paged_app("slices", 12);
+    let _ = update(&mut app, Message::ToggleSettings);
+    let _ = update(
+        &mut app,
+        Message::Settings(crate::frontend::settings::SettingsMsg::KeybindCapture(
+            "keys.randomApply".into(),
+            0,
+        )),
+    );
+    character(&mut app, "r", Modifiers::default());
+    press(&mut app, keyboard::Key::Named(Named::Enter), Modifiers::default());
+    let _ = update(&mut app, Message::ToggleSettings);
+    assert!(!app.panels.settings.open);
+    drain_calls(&app);
+    let mut seen = std::collections::HashSet::new();
+    for _ in 0..40 {
+        let before = app.scene.current;
+        character(&mut app, "r", Modifiers::default());
+        assert_ne!(app.scene.current, before, "random never repeats the current card");
+        let path = applied_path(&app).expect("random key applies a wallpaper");
+        let current = &app.library_session.library.catalog().items
+            [app.library_session.filtered[app.scene.current] as usize];
+        assert!(path.ends_with(&current.name), "{path} applies the selected card {}", current.name);
+        seen.insert(app.scene.current);
+    }
+    assert!(seen.len() > 3, "random picks spread across the library: {seen:?}");
+}
+
+#[test]
+fn random_wallpaper_is_unbound_by_default() {
+    let (mut app, _) = paged_app("slices", 12);
+    drain_calls(&app);
+    character(&mut app, "r", Modifiers::default());
+    assert_eq!(app.scene.current, 0);
+    assert_eq!(applied_path(&app), None);
+}
